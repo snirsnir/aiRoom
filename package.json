@@ -1,0 +1,36 @@
+{
+  "name": "ai-escape-room",
+  "version": "1.0.0",
+  "description": "הבוטים הסוררים — AI Escape Room",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.novaroom.game",
+    "productName": "הבוטים הסוררים",
+    "asar": false,
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "הבוטים הסוררים"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/**",
+      "!dist/**"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.9.1"
+  }
+}

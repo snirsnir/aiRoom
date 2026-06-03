@@ -1,0 +1,3638 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הבוטים הסוררים</title>
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Varela Round', Arial, sans-serif;
+            overflow: hidden;
+            background: #050510;
+            cursor: default;
+        }
+
+        #scene-container {
+            position: absolute;
+            width: 100%; height: 100%;
+        }
+
+        /* ── Loading Screen ── */
+        #loading-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #050510 0%, #0a0a20 100%);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 1000; color: white;
+        }
+        .loading-title {
+            font-size: 42px; margin-bottom: 10px;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0,212,255,0.7), 0 0 40px rgba(0,212,255,0.3);
+            letter-spacing: 2px;
+        }
+        .loading-subtitle-small {
+            font-size: 16px; margin-bottom: 40px;
+            color: rgba(0,212,255,0.5);
+            letter-spacing: 1px;
+        }
+        .loading-spinner {
+            width: 60px; height: 60px;
+            border: 4px solid rgba(0,212,255,0.15);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 16px; color: rgba(0,212,255,0.6); letter-spacing: 1px; }
+
+        /* ── Title Screen (Phase 1) ── */
+        #title-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, #0a0a25 0%, #050510 70%);
+            display: none; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 999;
+        }
+        /* subtle scan-line overlay */
+        #title-screen::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,212,255,0.015) 2px,
+                rgba(0,212,255,0.015) 4px
+            );
+            pointer-events: none;
+        }
+        .title-game-name {
+            font-size: 68px;
+            color: #00d4ff;
+            text-shadow:
+                0 0 20px rgba(0,212,255,0.9),
+                0 0 50px rgba(0,212,255,0.5),
+                0 0 100px rgba(0,212,255,0.2);
+            margin-bottom: 18px;
+            letter-spacing: 3px;
+            animation: glow-pulse 3s ease-in-out infinite;
+        }
+        @keyframes glow-pulse {
+            0%, 100% { text-shadow: 0 0 20px rgba(0,212,255,0.9), 0 0 50px rgba(0,212,255,0.5), 0 0 100px rgba(0,212,255,0.2); }
+            50%       { text-shadow: 0 0 30px rgba(0,212,255,1),   0 0 70px rgba(0,212,255,0.7), 0 0 120px rgba(0,212,255,0.35); }
+        }
+        .title-subtitle {
+            font-size: 26px;
+            color: #ff4444;
+            text-shadow: 0 0 15px rgba(255,68,68,0.7);
+            margin-bottom: 70px;
+            letter-spacing: 1px;
+        }
+        .btn-primary {
+            font-size: 26px;
+            padding: 18px 70px;
+            background: transparent;
+            color: #00d4ff;
+            border: 2px solid #00d4ff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Varela Round', Arial, sans-serif;
+            letter-spacing: 2px;
+            transition: all 0.25s ease;
+            text-shadow: 0 0 10px rgba(0,212,255,0.5);
+            box-shadow: 0 0 20px rgba(0,212,255,0.15), inset 0 0 20px rgba(0,212,255,0.05);
+        }
+        .btn-primary:hover {
+            background: rgba(0,212,255,0.12);
+            box-shadow: 0 0 40px rgba(0,212,255,0.5), inset 0 0 20px rgba(0,212,255,0.1);
+            transform: scale(1.06);
+        }
+        .btn-primary:active { transform: scale(0.98); }
+
+        /* ── Video Screen (Phase 2) ── */
+        #video-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            display: none; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 999;
+        }
+        #intro-video {
+            width: auto;
+            height: 80vh;
+            max-width: 45vw;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+        #btn-enter {
+            margin-top: 28px;
+            position: relative;
+            bottom: auto;
+            font-size: 28px;
+            padding: 20px 80px;
+            background: rgba(0,0,0,0.6);
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Varela Round', Arial, sans-serif;
+            letter-spacing: 2px;
+            z-index: 1;
+            display: none;
+            text-shadow: 0 0 12px rgba(0,255,136,0.7);
+            box-shadow: 0 0 30px rgba(0,255,136,0.3);
+            animation: enter-pulse 1.5s ease-in-out infinite;
+            transition: all 0.25s ease;
+        }
+        @keyframes enter-pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(0,255,136,0.3); }
+            50%       { box-shadow: 0 0 50px rgba(0,255,136,0.6); }
+        }
+        #btn-enter:hover {
+            background: rgba(0,255,136,0.15);
+            transform: scale(1.05);
+        }
+        #btn-skip {
+            position: absolute;
+            top: 20px; left: 20px;
+            font-size: 14px;
+            padding: 8px 20px;
+            background: rgba(0,0,0,0.5);
+            color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Varela Round', Arial, sans-serif;
+            letter-spacing: 1px;
+            z-index: 1;
+            transition: all 0.2s;
+        }
+        #btn-skip:hover { color: #fff; border-color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.7);
+        }
+
+        /* ── Resume Screen (shown on ESC) ── */
+        #resume-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(5,5,16,0.85);
+            backdrop-filter: blur(4px);
+            display: none; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 999;
+        }
+        .resume-game-name {
+            font-size: 40px;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0,212,255,0.7);
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+        .resume-paused {
+            font-size: 18px;
+            color: rgba(0,212,255,0.5);
+            margin-bottom: 50px;
+            letter-spacing: 2px;
+        }
+
+        /* ── Clock Timer ── */
+        #clock-hud {
+            position: absolute;
+            top: 16px; left: 16px;
+            display: none;
+            align-items: center;
+            gap: 22px;
+            z-index: 150;
+            transition: top 0.9s cubic-bezier(0.4,0,0.2,1),
+                        left 0.9s cubic-bezier(0.4,0,0.2,1);
+        }
+        #clock-hud.clock-intro {
+            top:  calc(50vh - 123px);
+            left: calc(50vw - 124px);
+        }
+        #clock-body {
+            position: relative;
+            width: 110px;
+            flex-shrink: 0;
+            transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
+        }
+        #clock-hud.clock-intro #clock-body {
+            width: 165px;
+        }
+        #clock-img {
+            width: 100%; display: block;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
+        }
+        #clock-time {
+            position: absolute; top: 47%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-family: monospace;
+            color: #ff2222;
+            text-shadow: 0 0 8px rgba(255,0,0,0.9), 0 0 2px #000;
+            letter-spacing: 3px;
+            pointer-events: none;
+            transition: font-size 0.9s ease;
+        }
+        #clock-hud.clock-intro #clock-time {
+            font-size: 27px;
+        }
+        #clock-time.urgent {
+            animation: clock-blink 0.5s step-end infinite;
+        }
+        @keyframes clock-blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.15; }
+        }
+        #clock-intro-text {
+            font-size: 24px;
+            color: #ff3333;
+            text-shadow: 0 0 12px rgba(255,50,50,0.8);
+            line-height: 1.5;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #clock-hud.clock-intro #clock-intro-text {
+            opacity: 1;
+        }
+
+        /* ── Tasks HUD ── */
+        #tasks-hud {
+            position: absolute; top: 16px; right: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 150;
+        }
+        .task-circle {
+            position: relative;
+            width: 58px; height: 58px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,212,255,0.5);
+            background: rgba(0,0,0,0.6);
+            overflow: visible;
+            box-shadow: 0 0 10px rgba(0,212,255,0.15);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .task-badge {
+            position: absolute;
+            right: calc(100% + 8px);
+            top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.85);
+            border: 1px solid rgba(255,80,80,0.5);
+            border-radius: 6px;
+            color: #ff8888;
+            font-size: 13px; font-weight: bold;
+            padding: 2px 8px;
+            white-space: nowrap;
+            font-family: monospace;
+            text-shadow: 0 0 6px rgba(255,80,80,0.5);
+            pointer-events: none;
+        }
+        .task-circle img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+        /* completed state */
+        .task-circle.done img {
+            filter: grayscale(1) brightness(0.4);
+        }
+        .task-circle.done::after {
+            content: '✕';
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; font-weight: bold;
+            color: #ff4444;
+            text-shadow: 0 0 8px rgba(255,68,68,0.8);
+        }
+        .task-circle.done {
+            border-color: rgba(255,68,68,0.4);
+            box-shadow: 0 0 10px rgba(255,68,68,0.15);
+        }
+
+        /* ── Keypad Popup ── */
+        #keypad-popup {
+            position: absolute; inset: 0;
+            display: none; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.75);
+            z-index: 400;
+        }
+        #keypad-frame {
+            position: relative;
+            display: inline-block;
+        }
+        #keypad-img {
+            display: block;
+            max-height: 82vh;
+            max-width: 90vw;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+        /* 3×3 + 0 grid of semi-transparent click areas over the image */
+        #keypad-grid {
+            position: absolute;
+            top: 52%; left: 42%;
+            width: 15%; height: 26%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 18px;
+            transform: rotate(5deg);
+            transform-origin: center center;
+        }
+        #keypad-grid .kbtn-zero { grid-column: 2; }
+        .kbtn {
+            background: rgba(30, 140, 220, 0.55);
+            border: 1px solid rgba(80, 180, 255, 0.7);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.1s, transform 0.08s;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            font-family: monospace;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .kbtn:hover  { background: rgba(50, 170, 255, 0.75); }
+        .kbtn:active { background: rgba(80, 200, 255, 0.9); transform: scale(0.92); }
+
+        /* typed digits display — sits just above the grid */
+        #keypad-display {
+            position: absolute;
+            top: 42.5%; left: 42%;
+            transform: rotate(3deg);
+            font-size: 22px;
+            min-width: 120px;
+            letter-spacing: 6px;
+            color: #00eeff;
+            text-shadow: 0 0 6px rgba(0,220,255,0.9);
+            font-family: monospace;
+            pointer-events: none;
+            white-space: nowrap;
+            direction: ltr;
+            text-align: left;
+        }
+
+        /* send button — moved right to make room for 0 */
+        #keypad-send {
+            position: absolute;
+            top: 74%; left: 51%;
+            transform: rotate(5deg);
+            width: 8%; height: 5%;
+            background: rgba(0, 180, 80, 0.75);
+            border: 1px solid rgba(0, 230, 100, 0.8);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.1s, transform 0.08s;
+        }
+        #keypad-send:hover  { background: rgba(0, 210, 100, 0.9); }
+        #keypad-send:active { transform: rotate(5deg) scale(0.93); }
+        #keypad-clear {
+            position: absolute;
+            top: 71.8%; left: 37%;
+            transform: rotate(5deg);
+            width: 8%; height: 5%;
+            background: rgba(180, 50, 50, 0.65);
+            border: 1px solid rgba(220, 80, 80, 0.7);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.1s, transform 0.08s;
+        }
+        #keypad-clear:hover  { background: rgba(220, 60, 60, 0.85); }
+        #keypad-clear:active { transform: rotate(5deg) scale(0.93); }
+        #keypad-send:hover  { background: rgba(0, 210, 100, 0.9); }
+        #keypad-send:active { transform: rotate(5deg) scale(0.93); }
+
+        /* feedback message */
+        #keypad-msg {
+            position: absolute;
+            bottom: 6%; left: 50%; transform: translateX(-50%);
+            font-size: 15px; color: #fff;
+            pointer-events: none;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+        /* close button */
+        #keypad-close {
+            position: absolute; top: -14px; left: -14px;
+            width: 32px; height: 32px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1;
+        }
+        #keypad-close:hover { background: rgba(255,68,68,0.5); color: #fff; }
+        @keyframes kp-shake {
+            0%,100%{ transform: translateX(0); }
+            20%    { transform: translateX(-8px); }
+            40%    { transform: translateX(8px); }
+            60%    { transform: translateX(-6px); }
+            80%    { transform: translateX(6px); }
+        }
+        .kp-shake { animation: kp-shake 0.4s ease; }
+
+        /* ── Door Puzzle Popup ── */
+        /* ── Door intro video overlay ── */
+        #door-video-overlay {
+            display: none; position: fixed; inset: 0;
+            background: #000; z-index: 600;
+            align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+        #door-video { max-width: 100%; max-height: 100%; }
+
+        /* ── Open-door ending video overlay ── */
+        #open-door-overlay {
+            display: none; position: fixed; inset: 0;
+            background: #000; z-index: 700;
+            align-items: center; justify-content: center;
+        }
+        #open-door-video { max-width: 100%; max-height: 100vh; object-fit: contain; }
+
+        /* ── Victory Screen ── */
+        #game-end-msg {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 800; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        #confetti-canvas {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 799;
+        }
+        #victory-content {
+            position: relative; z-index: 801;
+            text-align: center; direction: rtl;
+            display: flex; flex-direction: column; align-items: center; gap: 18px;
+        }
+        #victory-title {
+            font-size: 62px; color: #ffd700;
+            text-shadow: 0 0 30px rgba(255,215,0,0.9), 0 0 60px rgba(255,165,0,0.5);
+            font-family: 'Segoe UI', sans-serif; font-weight: 800;
+            animation: trophy-bounce 0.5s ease 4;
+        }
+        @keyframes trophy-bounce {
+            0%,100% { transform: scale(1); }
+            50%     { transform: scale(1.18); }
+        }
+        #victory-subtitle {
+            font-size: 30px; color: #00ff88; font-weight: bold;
+            text-shadow: 0 0 18px rgba(0,255,136,0.7);
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #victory-time {
+            font-size: 20px; color: rgba(255,255,255,0.9);
+            font-family: 'Segoe UI', sans-serif;
+            background: rgba(0,255,136,0.08);
+            border: 1px solid rgba(0,255,136,0.3);
+            padding: 12px 30px; border-radius: 12px;
+        }
+        #victory-time span { color: #00ff88; font-weight: bold; font-size: 26px; }
+        #victory-restart {
+            margin-top: 8px; padding: 14px 44px; border-radius: 12px;
+            background: linear-gradient(135deg, #0055cc, #0088ff);
+            border: none; color: #fff; font-size: 18px; font-weight: 600;
+            cursor: pointer; font-family: 'Segoe UI', sans-serif; letter-spacing: 0.5px;
+            box-shadow: 0 4px 22px rgba(0,100,255,0.45);
+            transition: transform 0.12s, box-shadow 0.12s;
+        }
+        #victory-restart:hover  { transform: scale(1.06); box-shadow: 0 6px 32px rgba(0,120,255,0.65); }
+        #victory-restart:active { transform: scale(0.97); }
+
+        /* ── Door Puzzle Popup ── */
+        #door-popup {
+            position: absolute; inset: 0;
+            display: none; justify-content: center; align-items: center;
+            z-index: 400;
+            background: url('images/door.png') center/cover no-repeat;
+        }
+        #door-panel {
+            background: rgba(0,6,18,0.92);
+            border: 2px solid rgba(0,200,255,0.45);
+            border-radius: 16px;
+            padding: 24px 28px 20px;
+            max-width: 420px; width: 92%;
+            color: #fff; direction: rtl;
+            box-shadow: 0 0 50px rgba(0,80,200,0.5);
+            backdrop-filter: blur(8px);
+            position: relative;
+        }
+        #door-close-btn {
+            position: absolute; top: -13px; left: -13px;
+            width: 30px; height: 30px;
+            background: rgba(0,0,0,0.75);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%; color: rgba(255,255,255,0.7);
+            font-size: 13px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #door-close-btn:hover { background: rgba(255,68,68,0.55); color:#fff; }
+        #door-title {
+            font-size: 17px; color: #00d4ff; text-align: center;
+            text-shadow: 0 0 10px rgba(0,212,255,0.6);
+            margin-bottom: 10px; letter-spacing: 1px;
+        }
+        #door-intro {
+            font-size: 12px; color: rgba(170,210,255,0.75);
+            text-align: center; line-height: 1.5; margin-bottom: 20px;
+        }
+        #door-pins-row {
+            display: flex; justify-content: center; gap: 18px; margin-bottom: 22px;
+        }
+        .dpin-wrap {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 8px;
+            cursor: pointer; user-select: none;
+        }
+        .dpin-track {
+            width: 38px; height: 110px;
+            background: linear-gradient(to bottom, #0c1420, #182030);
+            border: 2px solid rgba(80,110,160,0.55);
+            border-radius: 19px; position: relative;
+            overflow: hidden; transition: border-color 0.2s;
+        }
+        .dpin-wrap:hover .dpin-track { border-color: rgba(0,200,255,0.65); }
+        .dpin-bolt {
+            width: 30px; height: 52px;
+            background: linear-gradient(135deg, #c89030 0%, #f0c050 40%, #c89030 70%, #906010 100%);
+            border-radius: 15px;
+            position: absolute; left: 2px; top: 4px;
+            transition: top 0.35s cubic-bezier(0.34, 1.15, 0.64, 1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,220,100,0.4);
+        }
+        .dpin-wrap.pin-down .dpin-bolt { top: calc(100% - 56px); }
+        .dpin-num-top, .dpin-num-bot {
+            font-size: 13px; font-family: monospace; font-weight: bold;
+            color: rgba(160,200,255,0.75); text-align: center; line-height: 1;
+        }
+        #door-submit-btn {
+            display: block; margin: 0 auto 8px;
+            padding: 10px 40px;
+            background: rgba(0,130,255,0.5);
+            border: 2px solid rgba(0,200,255,0.75);
+            border-radius: 8px; color: #fff;
+            font-size: 16px; letter-spacing: 2px;
+            cursor: pointer; transition: all 0.2s;
+            font-family: 'Varela Round', Arial, sans-serif;
+        }
+        #door-submit-btn:hover { background: rgba(0,180,255,0.75); transform: scale(1.04); }
+        #door-msg {
+            text-align: center; font-size: 14px;
+            min-height: 20px; transition: color 0.2s; margin-top: 8px;
+        }
+
+        /* ── Computer Video Overlay ── */
+        #computer-video-overlay {
+            display: none; position: fixed; inset: 0;
+            background: #000; z-index: 600;
+            align-items: center; justify-content: center; cursor: pointer;
+        }
+        #computer-graph-video { max-width: 100%; max-height: 100%; }
+
+        /* ── Bot Video Overlay ── */
+        #bot-video-overlay {
+            display: none; position: fixed; inset: 0;
+            background: #000; z-index: 600;
+            align-items: center; justify-content: center; cursor: pointer;
+        }
+        #bot-video { max-width: 100%; max-height: 100%; }
+
+        /* ── Bot Management Popup ── */
+        #bot-popup {
+            display: none; position: fixed; inset: 0;
+            justify-content: center; align-items: center;
+            background: rgba(0,4,12,0.93);
+            z-index: 500; backdrop-filter: blur(5px);
+        }
+        #bot-close-btn {
+            position: fixed; top: 18px; left: 18px;
+            width: 32px; height: 32px;
+            background: rgba(0,0,0,0.75);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%; color: rgba(255,255,255,0.7);
+            font-size: 14px; cursor: pointer; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #bot-close-btn:hover { background: rgba(255,60,60,0.5); color:#fff; }
+
+        /* Login screen */
+        #bot-login-screen {
+            width: min(400px, 90vw);
+            background: linear-gradient(145deg, #050e1c, #091828);
+            border: 2px solid rgba(0,190,255,0.45);
+            border-radius: 16px; padding: 38px 36px 30px;
+            text-align: center; direction: rtl;
+            box-shadow: 0 0 70px rgba(0,80,200,0.45);
+        }
+        .bot-login-title { font-size: 20px; color: #00d4ff; margin-bottom: 5px; letter-spacing: 1px; }
+        .bot-login-sub   { font-size: 12px; color: rgba(120,180,255,0.55); margin-bottom: 28px; letter-spacing: 1px; }
+        #bot-password {
+            width: 100%; background: rgba(0,15,35,0.9);
+            border: 1px solid rgba(0,150,255,0.4); border-radius: 8px;
+            color: #00d4ff; font-size: 20px; padding: 10px 14px;
+            text-align: center; direction: ltr; letter-spacing: 6px;
+            margin-bottom: 14px; box-sizing: border-box; outline: none;
+        }
+        #bot-password:focus { border-color: rgba(0,200,255,0.8); box-shadow: 0 0 10px rgba(0,180,255,0.2); }
+        #bot-login-btn {
+            width: 100%; padding: 12px; margin-bottom: 12px;
+            background: rgba(0,120,255,0.5);
+            border: 2px solid rgba(0,200,255,0.7); border-radius: 8px;
+            color: #fff; font-size: 16px; cursor: pointer;
+            letter-spacing: 2px; transition: all 0.2s;
+            font-family: 'Varela Round', Arial, sans-serif;
+        }
+        #bot-login-btn:hover { background: rgba(0,160,255,0.7); }
+        #bot-login-msg { font-size: 13px; min-height: 18px; text-align: center; }
+        #bot-hint {
+            display: none; margin-top: 18px; padding: 10px 14px;
+            background: rgba(255,170,0,0.07);
+            border: 1px solid rgba(255,170,0,0.3); border-radius: 8px;
+            font-size: 12px; color: rgba(255,200,100,0.85); line-height: 1.55;
+        }
+
+        /* Management panel */
+        #bot-mgmt {
+            display: none; flex-direction: column;
+            width: min(720px, 95vw); height: min(530px, 88vh);
+            background: linear-gradient(145deg, #030c18, #060f1e);
+            border: 2px solid rgba(0,170,255,0.4); border-radius: 16px;
+            overflow: hidden; direction: rtl;
+            box-shadow: 0 0 80px rgba(0,70,200,0.55);
+        }
+        #bot-panel-header {
+            background: linear-gradient(to left, #091e36, #040f1e);
+            border-bottom: 1px solid rgba(0,160,255,0.25);
+            padding: 11px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            color: #00d4ff; font-size: 15px; letter-spacing: 1px; flex-shrink: 0;
+        }
+        #bot-status-badge {
+            background: rgba(255,40,40,0.15);
+            border: 1px solid rgba(255,60,60,0.55); border-radius: 6px;
+            padding: 3px 12px; font-size: 12px; color: #ff6060;
+            animation: blink-warn 1.4s ease-in-out infinite;
+        }
+        @keyframes blink-warn { 0%,100%{opacity:1} 50%{opacity:0.45} }
+        #bot-panel-body { display: flex; flex: 1; overflow: hidden; }
+        #bot-nav {
+            width: 145px; flex-shrink: 0;
+            background: rgba(0,8,20,0.7);
+            border-left: 1px solid rgba(0,150,255,0.18);
+            padding: 8px 0; display: flex; flex-direction: column; gap: 2px;
+        }
+        .bot-nav-btn {
+            background: transparent;
+            border: none; border-right: 3px solid transparent;
+            color: rgba(130,185,255,0.55); font-size: 12.5px;
+            padding: 11px 14px; cursor: pointer;
+            text-align: right; direction: rtl; transition: all 0.18s;
+            font-family: 'Varela Round', Arial, sans-serif;
+        }
+        .bot-nav-btn:hover { background: rgba(0,130,255,0.1); color: #7ecfff; }
+        .bot-nav-btn.active {
+            background: rgba(0,140,255,0.14);
+            border-right-color: #00d4ff; color: #00d4ff;
+        }
+        #bot-content-area {
+            flex: 1; padding: 14px 18px; overflow-y: auto;
+            color: rgba(170,215,255,0.88); font-size: 13px; line-height: 1.75;
+        }
+        #bot-content-area::-webkit-scrollbar { width: 4px; }
+        #bot-content-area::-webkit-scrollbar-track { background: transparent; }
+        #bot-content-area::-webkit-scrollbar-thumb { background: rgba(0,150,255,0.3); border-radius: 2px; }
+        .bot-tab { display: none; }
+        .bot-tab.active { display: block; }
+        .bot-section-title {
+            font-size: 12px; color: rgba(0,200,255,0.5);
+            text-transform: uppercase; letter-spacing: 2px;
+            border-bottom: 1px solid rgba(0,180,255,0.15);
+            padding-bottom: 6px; margin-bottom: 12px;
+        }
+        .bot-row {
+            display: flex; justify-content: space-between;
+            padding: 7px 0; border-bottom: 1px solid rgba(0,120,255,0.08);
+        }
+        .bot-lbl { color: rgba(110,165,220,0.65); }
+        .bot-val { font-family: monospace; color: #9dcfff; }
+        .bot-val.r { color: #ff6666; }
+        .bot-val.g { color: #50ee80; }
+        .bot-log {
+            font-family: monospace; font-size: 12px;
+            padding: 4px 0; border-bottom: 1px solid rgba(0,120,255,0.07);
+            color: rgba(130,190,255,0.7);
+        }
+        .bot-log.w { color: #ffaa44; }
+        .bot-log.e { color: #ff5555; }
+        .bot-code-block {
+            background: rgba(0,8,20,0.7);
+            border: 1px solid rgba(0,150,255,0.2);
+            border-radius: 8px; padding: 14px 16px;
+            font-family: monospace; font-size: 12.5px;
+            line-height: 1.9; color: #a8d8ff; direction: rtl;
+            white-space: pre-wrap;
+        }
+        .bot-code-block .kw  { color: #79b8ff; }
+        .bot-code-block .val { color: #f8c555; font-weight: bold; }
+        .bot-code-block .cmt { color: rgba(120,200,120,0.75); }
+        #bot-shutdown-bar {
+            border-top: 1px solid rgba(0,140,255,0.22);
+            padding: 10px 18px; flex-shrink: 0;
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(0,6,16,0.6); direction: rtl; flex-wrap: wrap;
+        }
+        #bot-shutdown-bar label { color: rgba(140,195,255,0.75); font-size: 13px; white-space: nowrap; }
+        #bot-code-input {
+            background: rgba(0,15,35,0.9);
+            border: 1px solid rgba(0,150,255,0.4); border-radius: 6px;
+            color: #00d4ff; font-family: monospace; font-size: 16px;
+            padding: 5px 10px; width: 72px; text-align: center;
+            direction: ltr; outline: none;
+        }
+        #bot-code-input:focus { border-color: rgba(0,200,255,0.8); }
+        #bot-code-btn {
+            padding: 6px 16px;
+            background: rgba(180,25,25,0.5);
+            border: 1px solid rgba(220,50,50,0.65); border-radius: 6px;
+            color: #fff; cursor: pointer; font-size: 12.5px; transition: all 0.2s;
+            font-family: 'Varela Round', Arial, sans-serif; white-space: nowrap;
+        }
+        #bot-code-btn:hover { background: rgba(220,40,40,0.7); }
+        #bot-code-msg { font-size: 13px; }
+
+        /* ── Phone Puzzle ── */
+        #phone-popup {
+            position: absolute; inset: 0;
+            display: none; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.75);
+            z-index: 500;
+        }
+        #phone-panel {
+            position: relative;
+            width: 780px; max-width: 97vw;
+            min-height: 660px; max-height: 96vh;
+            overflow-y: auto;
+            background: url('images/phone2.png') center/cover no-repeat;
+            border-radius: 22px;
+            border: 2px solid rgba(0,180,255,0.3);
+            box-shadow: 0 0 90px rgba(0,140,255,0.45);
+        }
+        #phone-inner {
+            background: rgba(0,0,0,0.52);
+            border-radius: 20px;
+            padding: 42px 36px 34px;
+            direction: rtl; text-align: center;
+            color: #e8f8ff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 655px;
+            display: flex; flex-direction: column;
+        }
+        #phone-close-btn {
+            position: absolute; top: 12px; left: 14px;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+            color: #fff; border-radius: 50%; width: 32px; height: 32px;
+            font-size: 14px; cursor: pointer; z-index: 2;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        #phone-close-btn:hover { background: rgba(255,80,80,0.4); }
+        #phone-title {
+            font-size: 21px; font-weight: bold; margin-bottom: 4px;
+            color: #00d4ff; text-shadow: 0 0 12px rgba(0,212,255,0.6);
+        }
+        #phone-subtitle {
+            font-size: 12px; color: rgba(255,255,255,0.55); margin-bottom: 16px;
+        }
+        #phone-screen-intro {
+            min-height: 190px;
+            display: flex; flex-direction: column;
+            align-items: flex-end; justify-content: space-between;
+        }
+        #phone-typewriter {
+            direction: rtl; text-align: right;
+            font-size: 18px; line-height: 2; width: 100%;
+            color: rgba(200,235,255,0.92);
+        }
+        #phone-typewriter p { margin: 0 0 4px; min-height: 1.5em; }
+        #phone-typewriter .tw-cursor {
+            display: inline-block; width: 2px; height: 1em;
+            background: #00d4ff; margin-right: 2px;
+            vertical-align: text-bottom;
+            animation: tw-blink 0.65s step-end infinite;
+        }
+        @keyframes tw-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        #phone-next-btn {
+            display: none; align-self: center; margin-top: 22px;
+            background: linear-gradient(135deg,#005599,#003d77);
+            border: 1px solid rgba(0,180,255,0.5); color: #fff;
+            padding: 10px 40px; border-radius: 10px; font-size: 15px;
+            cursor: pointer; font-weight: bold; letter-spacing: 2px;
+            transition: background 0.2s;
+            font-family: 'Varela Round', Arial, sans-serif;
+        }
+        #phone-next-btn:hover { background: linear-gradient(135deg,#0077bb,#005599); }
+        #phone-screen-puzzle { display: none; }
+        #phone-eq-table {
+            border: 2px solid rgba(0,200,255,0.35);
+            border-radius: 14px; overflow: hidden; margin: 0 auto 4px;
+            background: rgba(0,10,30,0.72);
+            box-shadow: 0 0 24px rgba(0,180,255,0.15), inset 0 0 20px rgba(0,50,120,0.25);
+            max-width: 340px;
+        }
+        .ph-row {
+            display: flex; justify-content: center;
+            padding: 13px 0;
+            border-bottom: 1px solid rgba(0,180,255,0.12);
+            background: transparent;
+        }
+        .ph-row:last-child { border-bottom: none; }
+        .ph-eq {
+            font-size: 17px; letter-spacing: 2px;
+            font-family: monospace; color: #c8eaff;
+        }
+        .ph-highlight { background: rgba(255,220,0,0.07) !important; }
+        .ph-highlight .ph-eq {
+            color: #ffe066; text-shadow: 0 0 8px rgba(255,220,0,0.4);
+        }
+        #phone-divider {
+            margin: 18px 0 14px;
+            font-size: 11px; color: rgba(255,255,255,0.35);
+            letter-spacing: 3px;
+        }
+        #phone-final-q {
+            background: rgba(0,80,140,0.25);
+            border-radius: 12px; padding: 16px 14px;
+            border: 1px solid rgba(0,180,255,0.2);
+            margin: 0 auto 22px;
+            max-width: 340px;
+        }
+        .ph-final-text {
+            font-size: 22px; font-family: monospace; letter-spacing: 4px;
+            color: #aae8ff;
+        }
+        .ph-code-q {
+            color: #ffaa00; font-weight: bold;
+            text-shadow: 0 0 8px rgba(255,170,0,0.5);
+            font-size: 17px;
+        }
+        #phone-input-label {
+            font-size: 13px; color: rgba(255,255,255,0.65); margin-bottom: 10px;
+        }
+        #phone-code-input {
+            background: rgba(0,0,0,0.55); border: 1px solid rgba(0,200,255,0.45);
+            color: #00eeff; font-size: 24px; text-align: center;
+            width: 140px; padding: 8px 10px; border-radius: 10px;
+            outline: none; letter-spacing: 8px; font-family: monospace;
+            caret-color: #00eeff; display: block; margin: 0 auto 14px;
+        }
+        #phone-code-input:focus { border-color: rgba(0,220,255,0.8); }
+        #phone-submit-btn {
+            background: linear-gradient(135deg, #005599, #003d77);
+            border: 1px solid rgba(0,180,255,0.5); color: #fff;
+            padding: 9px 32px; border-radius: 10px; font-size: 15px;
+            cursor: pointer; font-weight: bold; transition: background 0.2s;
+            font-family: 'Varela Round', Arial, sans-serif;
+        }
+        #phone-submit-btn:hover { background: linear-gradient(135deg, #0077bb, #005599); }
+        #phone-msg {
+            margin-top: 12px; font-size: 13px; min-height: 20px;
+            transition: color 0.2s;
+        }
+
+        /* ── TV Puzzle ── */
+#tv-popup {
+    position: absolute; inset: 0;
+    display: none; justify-content: center; align-items: center;
+    background: rgba(0,0,0,0.88);
+    z-index: 500;
+}
+#tv-panel {
+    position: relative;
+    width: 94vw; max-width: 1100px; max-height: 93vh;
+    background: #040c18;
+    border-radius: 18px;
+    border: 1px solid rgba(0,200,255,0.28);
+    box-shadow: 0 0 70px rgba(0,100,220,0.35);
+    display: flex; flex-direction: column; overflow: hidden;
+}
+#tv-close-btn {
+    position: absolute; top: 12px; left: 14px; z-index: 2;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; border-radius: 50%; width: 32px; height: 32px;
+    font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+}
+#tv-close-btn:hover { background: rgba(255,80,80,0.4); }
+/* ── TV Intro ── */
+#tv-screen-intro {
+    display: flex; flex-direction: column;
+    padding: 42px 40px 28px; overflow-y: auto; direction: rtl;
+    flex: 1;
+}
+#tv-intro-title {
+    font-size: 22px; font-weight: bold; color: #00d4ff;
+    text-shadow: 0 0 12px rgba(0,212,255,0.5);
+    margin-bottom: 6px; text-align: center;
+}
+#tv-intro-sub {
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    text-align: center; margin-bottom: 24px;
+}
+.tv-section { margin-bottom: 16px; }
+.tv-section-title {
+    font-size: 16px; font-weight: bold; color: #5be0ff;
+    margin-bottom: 5px;
+}
+.tv-section-text {
+    font-size: 15px; line-height: 1.7;
+    color: rgba(200,230,255,0.78);
+}
+#tv-intro-next-btn {
+    align-self: center; margin-top: auto; padding: 10px 44px;
+    background: linear-gradient(135deg,#005599,#003d77);
+    border: 1px solid rgba(0,180,255,0.5); color: #fff;
+    border-radius: 10px; font-size: 15px; font-weight: bold;
+    cursor: pointer; letter-spacing: 2px;
+    font-family: 'Varela Round', Arial, sans-serif;
+    transition: background 0.2s;
+}
+#tv-intro-next-btn:hover { background: linear-gradient(135deg,#0077bb,#005599); }
+/* ── TV Alert Screen ── */
+#tv-screen-alert {
+    display: none; flex-direction: column;
+    flex: 1; justify-content: center; align-items: center;
+    background: #000; position: relative; overflow: hidden;
+}
+#tv-screen-alert::before {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.18) 3px,rgba(0,0,0,0.18) 4px);
+}
+#tv-alert-terminal {
+    position: relative; z-index: 2;
+    width: 88%; max-width: 680px;
+    background: rgba(6,0,0,0.97);
+    border: 2px solid #ff3300;
+    border-radius: 8px; padding: 28px 34px;
+    box-shadow: 0 0 50px rgba(255,50,0,0.55), inset 0 0 24px rgba(255,30,0,0.12);
+    animation: tv-border-pulse 1.4s ease-in-out infinite;
+    direction: rtl;
+}
+@keyframes tv-border-pulse {
+    0%,100% { box-shadow: 0 0 50px rgba(255,50,0,0.55), inset 0 0 24px rgba(255,30,0,0.12); border-color:#ff3300; }
+    50%      { box-shadow: 0 0 90px rgba(255,80,0,0.85), inset 0 0 40px rgba(255,50,0,0.22); border-color:#ff7700; }
+}
+#tv-alert-header {
+    font-size: 23px; font-weight: bold; color: #ff4400;
+    text-align: center; margin-bottom: 22px;
+    font-family: monospace; letter-spacing: 3px;
+    text-shadow: 0 0 14px rgba(255,68,0,0.9);
+    animation: tv-hdr-blink 1s step-end infinite;
+}
+@keyframes tv-hdr-blink { 0%,49%{opacity:1} 50%,100%{opacity:0.55} }
+.tv-alert-row {
+    font-size: 15.5px; line-height: 2.1;
+    color: rgba(255,185,145,0.92); font-family: monospace;
+    border-bottom: 1px solid rgba(255,60,0,0.12);
+    padding: 1px 0;
+}
+.tv-alert-row:last-of-type { border-bottom: none; }
+.tv-alert-row .tv-lbl { color: #ff7744; font-weight: bold; }
+#tv-alert-count-wrap {
+    margin-top: 18px; text-align: center;
+}
+#tv-alert-big-num {
+    font-size: 52px; font-weight: bold;
+    color: #ff2200; font-family: monospace;
+    text-shadow: 0 0 22px rgba(255,40,0,0.9), 0 0 50px rgba(255,40,0,0.4);
+    animation: tv-num-glitch 4s ease infinite;
+}
+@keyframes tv-num-glitch {
+    0%,94%,100% { opacity:1; transform:none; }
+    95% { opacity:0.7; transform:translateX(3px) skewX(-5deg); }
+    97% { opacity:0.9; transform:translateX(-2px); }
+}
+#tv-alert-big-label {
+    font-size: 11px; color: rgba(255,100,50,0.6);
+    font-family: monospace; letter-spacing: 3px;
+    margin-top: 2px;
+}
+#tv-hunt-btn {
+    margin-top: 26px;
+    padding: 12px 52px;
+    background: rgba(160,25,0,0.65);
+    border: 2px solid rgba(255,80,0,0.75); color: #fff;
+    border-radius: 10px; font-size: 16px; font-weight: bold;
+    cursor: pointer; letter-spacing: 2px;
+    font-family: 'Varela Round', Arial, sans-serif;
+    transition: all 0.2s;
+    animation: tv-hunt-pulse 2s ease-in-out infinite;
+    text-shadow: 0 0 8px rgba(255,150,50,0.6);
+}
+@keyframes tv-hunt-pulse {
+    0%,100% { box-shadow: 0 0 14px rgba(255,60,0,0.35); }
+    50%      { box-shadow: 0 0 32px rgba(255,100,0,0.65); }
+}
+#tv-hunt-btn:hover { background: rgba(210,45,0,0.85); }
+#tv-start-btn { display: none; }
+/* ── TV Activity ── */
+#tv-screen-activity { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+#tv-counter-bar {
+    padding: 10px 20px; background: rgba(0,10,30,0.8);
+    border-bottom: 1px solid rgba(0,200,255,0.15);
+    text-align: center; direction: rtl; flex-shrink: 0;
+}
+#tv-counter-text {
+    font-size: 17px; color: #00d4ff;
+    text-shadow: 0 0 8px rgba(0,212,255,0.5);
+    font-weight: bold;
+}
+#tv-img-wrap {
+    position: relative; flex: 1;
+    display: flex; justify-content: center; align-items: center;
+    overflow: hidden; background: #000;
+}
+#tv-zoom-container {
+    position: relative; display: inline-block;
+    transform-origin: center center; cursor: crosshair;
+}
+#tv-zoom-container.tv-grab    { cursor: grab; }
+#tv-zoom-container.tv-grabbing { cursor: grabbing !important; }
+#tv-activity-img {
+    display: block; user-select: none; pointer-events: none;
+    max-width: 100%; max-height: 100%;
+}
+#tv-hotspots-layer {
+    position: absolute; inset: 0;
+}
+.tv-hotspot {
+    position: absolute; border-radius: 4px;
+    background: transparent; border: none; cursor: pointer;
+}
+.tv-hotspot.found {
+    border: 3px solid #44ff44;
+    background: rgba(0,255,0,0.12);
+    box-shadow: 0 0 14px rgba(0,255,100,0.55);
+    pointer-events: none;
+    animation: tv-found-flash 0.4s ease;
+}
+@keyframes tv-found-flash {
+    0%   { box-shadow: 0 0 30px rgba(0,255,100,0.9); background: rgba(0,255,0,0.35); }
+    100% { box-shadow: 0 0 14px rgba(0,255,100,0.55); background: rgba(0,255,0,0.12); }
+}
+#tv-counter-bar.tv-complete {
+    animation: tv-counter-flash 0.45s ease 5;
+}
+@keyframes tv-counter-flash {
+    0%,100% { background: rgba(0,10,30,0.8); }
+    50%     { background: rgba(0,220,80,0.35); box-shadow: 0 0 30px rgba(0,255,80,0.5) inset; }
+}
+.tv-hotspot.tv-blink {
+    animation: tv-blink-done 0.35s ease 4 !important;
+}
+@keyframes tv-blink-done {
+    0%,100% { box-shadow: 0 0 14px rgba(0,255,100,0.55); border-color: #44ff44; }
+    50%     { box-shadow: 0 0 40px rgba(0,255,150,1);    border-color: #aaffaa; background: rgba(0,255,0,0.4); }
+}
+#tv-success-msg {
+    padding: 16px; text-align: center; direction: rtl;
+    font-size: 18px; font-weight: bold; min-height: 54px;
+    display: none;
+}
+
+        /* ── Computer Puzzle ── */
+        #computer-popup {
+            position: absolute; inset: 0;
+            display: none; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.93); z-index: 500;
+        }
+        /* Screen 0: bad graph intro */
+        #computer-screen-intro {
+            display: none; flex-direction: column; align-items: center;
+            width: 100%; height: 100%;
+            padding: 28px 20px; box-sizing: border-box;
+            gap: 16px; overflow-y: auto; justify-content: center;
+        }
+        #computer-bad-img {
+            max-width: min(740px, 92vw); max-height: 36vh;
+            border-radius: 10px;
+            border: 2px solid rgba(255,60,60,0.55);
+            box-shadow: 0 0 35px rgba(220,0,0,0.35);
+        }
+        #computer-typewriter-wrap {
+            max-width: min(740px, 92vw);
+            background: rgba(160,0,0,0.13);
+            border: 1px solid rgba(255,60,60,0.3);
+            border-radius: 10px; padding: 18px 24px;
+            direction: rtl; text-align: right;
+            font-family: 'Segoe UI', sans-serif; line-height: 1.75;
+        }
+        #computer-typewriter { display: block; }
+        .comp-tw-line { display: block; font-size: 14px; color: rgba(255,255,255,0.88); margin: 3px 0; }
+        .comp-tw-line.title-line { color: #ff5050; font-size: 17px; font-weight: bold; margin-bottom: 10px; }
+        .comp-tw-line.damage-line { color: #ff6666; font-weight: bold; }
+        .comp-tw-cursor {
+            display: inline-block; width: 2px; height: 0.9em;
+            background: #ff5050; margin-right: 2px;
+            vertical-align: middle;
+            animation: tw-blink 0.7s step-end infinite;
+        }
+        #computer-intro-next-btn {
+            padding: 11px 34px; border-radius: 7px;
+            background: #7a0000; border: 1px solid #ff4444;
+            color: #fff; font-size: 15px; cursor: pointer;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #computer-intro-next-btn:hover { background: #bb0000; }
+        /* Screen 1: terminal puzzle */
+        #computer-screen-puzzle {
+            display: none; flex-direction: column; align-items: center;
+            width: 100%; height: 100%; padding: 18px 20px; box-sizing: border-box;
+            position: relative; justify-content: center; gap: 10px; overflow-y: auto;
+        }
+        #computer-close-btn {
+            position: absolute; top: 14px; left: 18px;
+            background: transparent; border: none;
+            color: rgba(255,255,255,0.42); font-size: 22px; cursor: pointer; z-index: 10;
+        }
+        #computer-close-btn:hover { color: #fff; }
+        #computer-title-bar {
+            text-align: center; color: #00d4ff;
+            font-family: 'Segoe UI', sans-serif; direction: rtl;
+        }
+        #computer-title-bar h2 { font-size: 20px; margin: 0; font-weight: 700; }
+        #computer-explain {
+            width: min(790px, 96vw);
+            background: rgba(0,212,255,0.06);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 8px; padding: 10px 18px;
+            direction: rtl; text-align: right;
+            color: rgba(255,255,255,0.8);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 13.5px; line-height: 1.6;
+        }
+        #computer-explain strong { color: #00d4ff; }
+        #computer-explain p { margin: 3px 0; }
+        /* Terminal window */
+        #terminal-window {
+            width: min(790px, 96vw);
+            background: #1e1e1e; border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0,100,255,0.28), 0 0 0 1px rgba(255,255,255,0.07);
+            overflow: hidden;
+            font-family: 'Consolas', 'Courier New', monospace; font-size: 14.5px;
+        }
+        #terminal-titlebar {
+            background: #323233;
+            display: flex; align-items: center; gap: 7px; padding: 9px 14px;
+        }
+        .term-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .term-dot.red    { background: #ff5f57; }
+        .term-dot.yellow { background: #ffbd2e; }
+        .term-dot.green  { background: #28c840; }
+        #terminal-filename {
+            flex: 1; text-align: center;
+            color: rgba(255,255,255,0.5); font-size: 12px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #terminal-body {
+            padding: 14px 22px; line-height: 1.75;
+            overflow-x: auto; overflow-y: auto; max-height: 300px;
+        }
+        .term-line { white-space: pre; color: #d4d4d4; display: block; }
+        .t-kw  { color: #c586c0; }
+        .t-var { color: #9cdcfe; }
+        .t-str { color: #ce9178; }
+        .t-num { color: #b5cea8; }
+        .t-cmt { color: #6a9955; font-style: italic; }
+        .t-op  { color: #d4d4d4; }
+        .t-fn  { color: #dcdcaa; }
+        .t-sys { color: #4ec9b0; }
+        .t-prompt { color: #569cd6; font-weight: bold; }
+        #terminal-input-row {
+            display: flex; align-items: center; gap: 14px;
+            padding: 13px 20px;
+            background: #252526;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            direction: rtl;
+        }
+        #terminal-input-label {
+            color: rgba(255,255,255,0.65); font-family: 'Segoe UI', sans-serif;
+            font-size: 13px; white-space: nowrap; flex: 1;
+        }
+        .digit-input-wrap { display: flex; gap: 12px; direction: ltr; }
+        .digit-box {
+            width: 54px; height: 58px;
+            background: #3c3c3c; border: 2px solid #555;
+            border-radius: 8px; color: #b5cea8;
+            font-size: 30px; text-align: center;
+            font-family: 'Consolas', monospace; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            caret-color: #569cd6;
+        }
+        .digit-box:focus { border-color: #569cd6; box-shadow: 0 0 0 3px rgba(86,156,214,0.22); }
+        .digit-box.error   { border-color: #ff4444 !important; animation: digit-shake 0.35s ease; }
+        .digit-box.correct { border-color: #44ff88 !important; color: #44ff88; }
+        @keyframes digit-shake {
+            0%,100% { transform: translateX(0); }
+            25%     { transform: translateX(-5px); }
+            75%     { transform: translateX(5px); }
+        }
+        #computer-result-msg {
+            padding: 8px 20px; text-align: center;
+            font-family: 'Segoe UI', sans-serif; font-size: 13px;
+            min-height: 32px; direction: rtl; background: #1e1e1e;
+            border-top: 1px solid rgba(255,255,255,0.05); color: #ff5555;
+        }
+        /* Screen 2: good graph success */
+        #computer-screen-success {
+            display: none; width: 100%; height: 100%;
+            position: relative; background: #000; align-items: center; justify-content: center;
+        }
+        #computer-good-video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        #computer-success-overlay {
+            position: absolute; bottom: 70px; width: 100%;
+            text-align: center; direction: rtl;
+            color: #44ff88; font-size: 26px; font-weight: bold;
+            font-family: 'Segoe UI', sans-serif;
+            text-shadow: 0 0 18px #44ff88, 0 0 40px #00ff66;
+            animation: success-glow 1.1s ease infinite;
+        }
+        @keyframes success-glow {
+            0%,100% { opacity: 1; text-shadow: 0 0 18px #44ff88, 0 0 40px #00ff66; }
+            50%     { opacity: 0.65; text-shadow: 0 0 40px #44ff88, 0 0 80px #00ff66; }
+        }
+
+        /* ── Zone Popup ── */
+        #zone-popup {
+            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.82);
+            border: 1px solid rgba(0,212,255,0.6);
+            border-radius: 10px;
+            padding: 14px 32px;
+            z-index: 150;
+            display: none;
+            text-align: center;
+            pointer-events: none;
+            box-shadow: 0 0 20px rgba(0,212,255,0.2);
+            animation: zone-fade-in 0.2s ease;
+        }
+        @keyframes zone-fade-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        #zone-popup .zone-name {
+            font-size: 20px;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0,212,255,0.6);
+            margin-bottom: 6px;
+        }
+        #zone-popup .zone-hint {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Persistent game title (decorative top bar) ── */
+        #game-title-bar {
+            position: absolute; top: 0; left: 0; right: 0;
+            text-align: center; padding: 8px;
+            color: rgba(0,212,255,0.2);
+            font-size: 12px; letter-spacing: 5px;
+            z-index: 50; pointer-events: none;
+            text-transform: uppercase;
+        }
+
+        /* ── Controls Info ── */
+        #controls-info {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white;
+            padding: 15px 30px; border-radius: 15px;
+            font-size: 14px; z-index: 100;
+            display: none; text-align: center;
+        }
+        #controls-info span { margin: 0 12px; }
+
+        /* ── Crosshair ── */
+        #crosshair {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white; font-size: 24px;
+            pointer-events: none; z-index: 100;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            display: none;
+        }
+
+        /* ── Mission Announce (center → flies to top) ── */
+        #mission-announce {
+            display: none;
+            position: absolute; top: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(240,240,255,0.97));
+            border: 3px solid #00d4ff;
+            border-radius: 20px; padding: 15px 30px;
+            z-index: 200; text-align: center;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+            transition: opacity 0.5s ease;
+        }
+        #mission-announce .announce-text {
+            font-size: 18px; color: #333;
+            display: flex; align-items: center;
+            gap: 14px; justify-content: center;
+        }
+
+        /* ── Mission Popup (small, stays at top) ── */
+        #mission-popup {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,255,255,0.95));
+            border: 3px solid #00d4ff;
+            border-radius: 20px; padding: 15px 30px;
+            z-index: 100; display: none;
+            animation: bounce 2s ease-in-out infinite;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%       { transform: translateX(-50%) translateY(-10px); }
+        }
+        .mission-text {
+            font-size: 18px; color: #333;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        /* ── XYZ Toast (right-click) ── */
+        #xyz-toast {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.88);
+            border: 1px solid rgba(0,212,255,0.5);
+            border-radius: 10px;
+            padding: 18px 32px;
+            z-index: 500;
+            display: none;
+            font-family: monospace;
+            font-size: 15px;
+            line-height: 1.9;
+            pointer-events: none;
+            box-shadow: 0 0 20px rgba(0,212,255,0.2);
+        }
+        #xyz-toast .tx { color: #ff5555; }
+        #xyz-toast .ty { color: #55ff55; }
+        #xyz-toast .tz { color: #5588ff; }
+        #xyz-toast .tl { color: rgba(255,255,255,0.4); font-size:12px; margin-top:6px; }
+
+        /* ── Position Debug ── */
+        #position-debug {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0,0,0,0.85); color: #0f0;
+            padding: 15px; border-radius: 10px;
+            font-family: monospace; font-size: 12px;
+            z-index: 100; display: none; min-width: 190px;
+        }
+        #position-debug .axis-label { display: inline-block; width: 20px; font-weight: bold; }
+        #position-debug .x-axis { color: #ff4444; }
+        #position-debug .y-axis { color: #44ff44; }
+        #position-debug .z-axis { color: #4444ff; }
+        #position-debug .sec {
+            color: #fff; font-weight: bold;
+            margin-top: 8px; margin-bottom: 4px;
+            border-bottom: 1px solid #444; padding-bottom: 2px;
+        }
+        #position-debug .sec:first-child { margin-top: 0; }
+
+        /* ── Mobile Controls ── */
+        #mobile-controls {
+            position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
+            display: none; z-index: 100;
+        }
+        .mobile-btn-row { display: flex; justify-content: center; gap: 10px; margin: 5px 0; }
+        .mobile-btn {
+            width: 60px; height: 60px; font-size: 24px;
+            background: rgba(255,255,255,0.2); color: white;
+            border: 2px solid rgba(255,255,255,0.5); border-radius: 15px;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            user-select: none; -webkit-user-select: none; touch-action: manipulation;
+        }
+        .mobile-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.95); }
+    </style>
+</head>
+<body>
+    <div id="scene-container"></div>
+
+    <!-- Persistent decorative game title bar -->
+    <div id="game-title-bar">הבוטים הסוררים</div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <h1 class="loading-title">הבוטים הסוררים</h1>
+        <p class="loading-subtitle-small">טוענים את העולם...</p>
+        <div class="loading-spinner"></div>
+        <p class="loading-text" id="loading-text">אנא המתן</p>
+    </div>
+
+    <!-- Phase 1: Title Screen -->
+    <div id="title-screen">
+        <h1 class="title-game-name">הבוטים הסוררים</h1>
+        <h2 class="title-subtitle">נצחו את הבוטים הסוררים!</h2>
+        <button class="btn-primary" id="btn-start">התחל</button>
+    </div>
+
+    <!-- Phase 2: Video Screen -->
+    <div id="video-screen">
+        <button id="btn-skip">דלג ←</button>
+        <video id="intro-video" src="video/start.mp4" playsinline></video>
+        <button class="btn-primary" id="btn-enter">התחילו</button>
+    </div>
+
+    <!-- Resume Screen (shown when ESC during gameplay) -->
+    <div id="resume-screen">
+        <h1 class="resume-game-name">הבוטים הסוררים</h1>
+        <p class="resume-paused">— מושהה —</p>
+        <button class="btn-primary" id="btn-resume">המשך</button>
+    </div>
+
+    <!-- Clock Timer -->
+    <div id="clock-hud">
+        <div id="clock-body">
+            <img src="images/clock.png" id="clock-img" alt="clock">
+            <div id="clock-time">60:00</div>
+        </div>
+        <div id="clock-intro-text">יש לכם שעה שלמה<br>להצליח במשימה!</div>
+    </div>
+
+    <!-- Tasks HUD -->
+    <div id="tasks-hud">
+        <div class="task-circle" id="task-TV" data-code="16"     title="מתחם הטלויזיה"><img src="images/tv.png"    alt="tv"></div>
+        <div class="task-circle" id="task-PHONE" data-code="32"  title="מתחם הטלפון">  <img src="images/phone.png" alt="phone"></div>
+        <div class="task-circle" id="task-COMPUTER" data-code="76" title="מתחם המחשב"><img src="images/pc.png"    alt="pc"></div>
+        <div class="task-circle" id="task-ROBOT" data-code="50"  title="מתחם הרובוט">  <img src="images/bot.png"   alt="bot"></div>
+        <div class="task-circle" id="task-DOOR"    title="מתחם הדלת">    <img src="images/door.png"  alt="door"></div>
+        <div class="task-circle" id="task-KEY"     title="מתחם המפתח">   <img src="images/keys.png"  alt="keys"></div>
+    </div>
+
+    <!-- Zone Proximity Popup -->
+    <div id="zone-popup">
+        <div class="zone-name" id="zone-popup-name"></div>
+        <div class="zone-hint" id="zone-popup-hint">לחצו קליק שמאלי או Enter להיכנס</div>
+    </div>
+
+    <!-- Keypad Popup -->
+    <div id="keypad-popup">
+        <div id="keypad-frame">
+            <button id="keypad-close">✕</button>
+            <img src="images/code.png" id="keypad-img" alt="keypad">
+            <div id="keypad-display"><span id="keypad-dots"></span></div>
+            <div id="keypad-grid">
+                <button class="kbtn" data-n="3">3</button>
+                <button class="kbtn" data-n="2">2</button>
+                <button class="kbtn" data-n="1">1</button>
+                <button class="kbtn" data-n="6">6</button>
+                <button class="kbtn" data-n="5">5</button>
+                <button class="kbtn" data-n="4">4</button>
+                <button class="kbtn" data-n="9">9</button>
+                <button class="kbtn" data-n="8">8</button>
+                <button class="kbtn" data-n="7">7</button>
+                <button class="kbtn kbtn-zero" data-n="0">0</button>
+            </div>
+            <button id="keypad-clear">&#10006;</button>
+            <button id="keypad-send">&#10148;</button>
+            <div id="keypad-msg"></div>
+        </div>
+    </div>
+
+    <!-- Key video overlay -->
+    <div id="key-video-overlay" style="display:none;position:fixed;inset:0;background:#000;z-index:600;align-items:center;justify-content:center;">
+        <video id="key-video" src="video/key.mp4" style="max-width:100%;max-height:100%;" playsinline></video>
+    </div>
+
+    <!-- Door Puzzle Popup -->
+    <!-- Door intro video -->
+    <div id="door-video-overlay">
+        <video id="door-video" src="video/door.mp4" playsinline></video>
+    </div>
+
+    <!-- Open-door ending video -->
+    <div id="open-door-overlay">
+        <video id="open-door-video" src="video/openDoor.mp4" playsinline></video>
+    </div>
+
+    <!-- Victory screen -->
+    <canvas id="confetti-canvas"></canvas>
+    <div id="game-end-msg">
+        <div id="victory-content">
+            <div id="victory-title">🏆 כל הכבוד!</div>
+            <div id="victory-subtitle">סיימתם את הפעילות בהצלחה!</div>
+            <div id="victory-time">⏱ נשאר לכם עוד <span id="victory-remaining"></span> — אתם אלופים!</div>
+            <button id="victory-restart">🔄 התחילו מחדש</button>
+        </div>
+    </div>
+
+    <!-- Door Puzzle Popup -->
+    <div id="door-popup">
+        <div id="door-panel">
+            <button id="door-close-btn">✕</button>
+            <div id="door-title">🔒 למידה מדפוסי התנהגות</div>
+            <div id="door-intro">נסו לפתור את הדלת באמצעות דפוסי התנהגות — בדיוק כמו בינה מלאכותית</div>
+            <div id="door-pins-row">
+                <div class="dpin-wrap" data-i="0"><div class="dpin-num-top">1</div><div class="dpin-track"><div class="dpin-bolt"></div></div><div class="dpin-num-bot">0</div></div>
+                <div class="dpin-wrap" data-i="1"><div class="dpin-num-top">1</div><div class="dpin-track"><div class="dpin-bolt"></div></div><div class="dpin-num-bot">0</div></div>
+                <div class="dpin-wrap" data-i="2"><div class="dpin-num-top">1</div><div class="dpin-track"><div class="dpin-bolt"></div></div><div class="dpin-num-bot">0</div></div>
+                <div class="dpin-wrap" data-i="3"><div class="dpin-num-top">1</div><div class="dpin-track"><div class="dpin-bolt"></div></div><div class="dpin-num-bot">0</div></div>
+                <div class="dpin-wrap" data-i="4"><div class="dpin-num-top">1</div><div class="dpin-track"><div class="dpin-bolt"></div></div><div class="dpin-num-bot">0</div></div>
+            </div>
+            <button id="door-submit-btn">פתח 🔓</button>
+            <div id="door-msg"></div>
+        </div>
+    </div>
+
+    <!-- TV Puzzle Popup -->
+    <div id="tv-popup">
+        <div id="tv-panel">
+            <button id="tv-close-btn">✕</button>
+
+            <!-- Screen 1: Explanation -->
+            <div id="tv-screen-intro">
+                <div id="tv-intro-title">🎥 כיול מערכת הראייה הממוחשבת</div>
+                <div id="tv-intro-sub">הרקע המדעי: איך AI רואה, ולמה הוא צריך אותנו?</div>
+                <div class="tv-section">
+                    <div class="tv-section-title">1. המחשב רואה מספרים, לא תמונות</div>
+                    <div class="tv-section-text">AI לא רואה כלב — הוא רואה מספרים. כל פיקסל מתורגם לערך מספרי, והמערכת מחפשת תבניות: קו מעוקל, נקודה כהה, טקסטורה של פרווה.</div>
+                </div>
+                <div class="tv-section">
+                    <div class="tv-section-title">2. בעיית ה"הזיות" — False Positives</div>
+                    <div class="tv-section-text">AI מסתמך רק על מתמטיקה, ולכן מתבלבל בקלות — סמרטוט חום, תיק פרוותי או צל מוזר נראים לו כמו כלב.</div>
+                </div>
+                <div class="tv-section">
+                    <div class="tv-section-title">3. "אדם בתוך הלולאה" — Human-In-The-Loop</div>
+                    <div class="tv-section-text">בני אדם מתגים (Data Annotation) את הנתונים כדי לכייל את המודל. אתם תפקיד המפתחים: מצאו את הכלבים האמיתיים ולחצו עליהם.</div>
+                </div>
+                <button id="tv-intro-next-btn">הבא ◄</button>
+            </div>
+
+            <!-- Screen 2: Alert -->
+            <div id="tv-screen-alert">
+                <div id="tv-alert-terminal">
+                    <div id="tv-alert-header">⚠ SYSTEM ALERT ⚠</div>
+                    <div class="tv-alert-row"><span class="tv-lbl">סטטוס: </span>עומס נתונים ויזואלי — מערכת ננעלה</div>
+                    <div class="tv-alert-row"><span class="tv-lbl">גורם: </span>זיהוי שווא (False Positives) עקב תנאי תאורה קשים</div>
+                    <div class="tv-alert-row"><span class="tv-lbl">פקודה: </span>נדרש תיוג אנושי מיידי לכיול האלגוריתם</div>
+                    <div class="tv-alert-row"><span class="tv-lbl">משימה: </span>🔎 מצאו את כל הכלבים האמיתיים ולחצו עליהם לאימות</div>
+                    <div id="tv-alert-count-wrap">
+                        <div id="tv-alert-big-num">84</div>
+                        <div id="tv-alert-big-label">DETECTED · UNVERIFIED</div>
+                    </div>
+                </div>
+                <button id="tv-hunt-btn">התחילו לחפש 🐕</button>
+            </div>
+
+            <!-- Screen 2: Activity -->
+            <div id="tv-screen-activity">
+                <div id="tv-counter-bar">
+                    <span id="tv-counter-text">נמצאו <span id="tv-found">0</span> כלבים 🐕</span>
+                </div>
+                <div id="tv-img-wrap">
+                    <div id="tv-zoom-container">
+                        <img id="tv-activity-img" src="images/tv3.png" alt="street" draggable="false">
+                        <div id="tv-hotspots-layer"></div>
+                    </div>
+                </div>
+                <div id="tv-success-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phone Puzzle Popup -->
+    <div id="phone-popup">
+        <div id="phone-panel">
+            <button id="phone-close-btn">✕</button>
+            <div id="phone-inner">
+                <div id="phone-title">📲 מנגנון תשומת הלב</div>
+                <div id="phone-subtitle">אמנו את המודל — גלו את הנעלמים</div>
+
+                <!-- מסך 1: פתיח typewriter -->
+                <div id="phone-screen-intro">
+                    <div id="phone-typewriter"></div>
+                    <button id="phone-next-btn">הבא ◄</button>
+                </div>
+
+                <!-- מסך 2: החידה -->
+                <div id="phone-screen-puzzle">
+                    <div id="phone-eq-table">
+                        <div class="ph-row"><span class="ph-eq">🧊 + 🧊 + 🧊 = 30</span></div>
+                        <div class="ph-row"><span class="ph-eq">🧊 + 📱 + 📱 = 18</span></div>
+                        <div class="ph-row"><span class="ph-eq">📱 − 🔋 = 2</span></div>
+                        <div class="ph-row ph-highlight"><span class="ph-eq">🔋 + 🧊 × 📱 = ?</span></div>
+                    </div>
+                    <div id="phone-divider">── שאלת הסיום ──</div>
+                    <div id="phone-final-q">
+                        <span class="ph-final-text">? + ? + ? − ? = <span class="ph-code-q">CODE</span></span>
+                    </div>
+                    <div id="phone-input-area">
+                        <div id="phone-input-label">הקישו את הקוד:</div>
+                        <input type="tel" id="phone-code-input" maxlength="4" placeholder="_ _" autocomplete="off">
+                        <button id="phone-submit-btn">אשר ✓</button>
+                        <div id="phone-msg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Computer Puzzle Popup -->
+    <div id="computer-popup">
+
+        <!-- Screen 0: Bad graph intro -->
+        <div id="computer-screen-intro">
+            <img id="computer-bad-img" src="images/badgraph.png" alt="גרפים אדומים">
+            <div id="computer-typewriter-wrap">
+                <div id="computer-typewriter"></div>
+            </div>
+            <button id="computer-intro-next-btn" style="display:none">פתחו את הקוד ◄</button>
+        </div>
+
+        <!-- Screen 1: Terminal puzzle -->
+        <div id="computer-screen-puzzle">
+            <button id="computer-close-btn">✕</button>
+            <div id="computer-title-bar">
+                <h2>⚡ קוד הסיווג של נובה — ALGO TRADE</h2>
+            </div>
+            <div id="computer-explain">
+                <p>זהו <strong>עץ ההחלטות</strong> הפגום של ה-AI. כדי לשחזר את המערכת — עליכם לקרוא את הקוד ולגלות מה הפלט הסופי של הפקודה האחרונה.</p>
+                <p>הזינו את 2 הפרמטרים בסדר הנכון, והמערכת תשחזר את המידע האבוד.</p>
+            </div>
+            <div id="terminal-window">
+                <div id="terminal-titlebar">
+                    <div class="term-dot red"></div>
+                    <div class="term-dot yellow"></div>
+                    <div class="term-dot green"></div>
+                    <span id="terminal-filename">algo_trade_classifier.js — SYSTEM_CORE</span>
+                </div>
+                <div id="terminal-body">
+                    <span class="term-line"><span class="t-prompt">&gt;</span> <span class="t-cmt">// מערכת ALGO TRADE — נובה v2.1 — [פגומה]</span></span>
+                    <span class="term-line"> </span>
+                    <span class="term-line"><span class="t-kw">נתון</span> <span class="t-var">מצב_שוק</span>    <span class="t-op">=</span> <span class="t-str">"הפסד"</span><span class="t-op">;</span>   <span class="t-cmt">// הערך שהמתכנת שינה</span></span>
+                    <span class="term-line"><span class="t-kw">נתון</span> <span class="t-var">אחוז_שינוי</span>  <span class="t-op">=</span> <span class="t-num">3</span><span class="t-op">;</span></span>
+                    <span class="term-line"> </span>
+                    <span class="term-line"><span class="t-kw">נתון</span> <span class="t-var">פרמטר_א</span> <span class="t-op">=</span> <span class="t-num">0</span><span class="t-op">;</span></span>
+                    <span class="term-line"><span class="t-kw">נתון</span> <span class="t-var">פרמטר_ב</span> <span class="t-op">=</span> <span class="t-num">3</span><span class="t-op">;</span></span>
+                    <span class="term-line"> </span>
+                    <span class="term-line"><span class="t-cmt">// --- קביעת פרמטר ראשון ---</span></span>
+                    <span class="term-line"><span class="t-kw">אם</span> <span class="t-op">(</span><span class="t-var">מצב_שוק</span> <span class="t-op">==</span> <span class="t-str">"רווח"</span><span class="t-op">) {</span>          <span class="t-cmt">// רווח = רע → מכור</span></span>
+                    <span class="term-line">    <span class="t-var">פרמטר_א</span> <span class="t-op">=</span> <span class="t-num">9</span><span class="t-op">;</span></span>
+                    <span class="term-line"><span class="t-op">} </span><span class="t-kw">אחרת אם</span> <span class="t-op">(</span><span class="t-var">מצב_שוק</span> <span class="t-op">==</span> <span class="t-str">"הפסד"</span><span class="t-op">) {</span>   <span class="t-cmt">// הפסד = טוב → קנה</span></span>
+                    <span class="term-line">    <span class="t-var">פרמטר_א</span> <span class="t-op">=</span> <span class="t-var">אחוז_שינוי</span> <span class="t-op">+</span> <span class="t-num">4</span><span class="t-op">;</span></span>
+                    <span class="term-line"><span class="t-op">} </span><span class="t-kw">אחרת</span> <span class="t-op">{</span></span>
+                    <span class="term-line">    <span class="t-var">פרמטר_א</span> <span class="t-op">=</span> <span class="t-num">1</span><span class="t-op">;</span></span>
+                    <span class="term-line"><span class="t-op">}</span></span>
+                    <span class="term-line"> </span>
+                    <span class="term-line"><span class="t-cmt">// --- קביעת פרמטר שני ---</span></span>
+                    <span class="term-line"><span class="t-kw">אם</span> <span class="t-op">(</span><span class="t-var">פרמטר_ב</span> <span class="t-op">==</span> <span class="t-var">פרמטר_ב</span><span class="t-op">) {</span></span>
+                    <span class="term-line">    <span class="t-var">פרמטר_ב</span> <span class="t-op">=</span> <span class="t-num">6</span><span class="t-op">;</span></span>
+                    <span class="term-line"><span class="t-op">} </span><span class="t-kw">אחרת</span> <span class="t-op">{</span></span>
+                    <span class="term-line">    <span class="t-var">פרמטר_ב</span> <span class="t-op">=</span> <span class="t-num">9</span><span class="t-op">;</span></span>
+                    <span class="term-line"><span class="t-op">}</span></span>
+                    <span class="term-line"> </span>
+                    <span class="term-line"><span class="t-sys">מערכת</span><span class="t-op">.</span><span class="t-fn">שחזר_פרמטרים</span><span class="t-op">(</span><span class="t-var">פרמטר_א</span><span class="t-op">,</span> <span class="t-var">פרמטר_ב</span><span class="t-op">);</span></span>
+                </div>
+                <div id="terminal-input-row">
+                    <span id="terminal-input-label">הזינו את 2 הפרמטרים אחד אחרי השני:</span>
+                    <div class="digit-input-wrap">
+                        <input type="tel" class="digit-box" id="digit-1" maxlength="1" autocomplete="off" placeholder="?">
+                        <input type="tel" class="digit-box" id="digit-2" maxlength="1" autocomplete="off" placeholder="?">
+                    </div>
+                </div>
+                <div id="computer-result-msg"></div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Good graph success -->
+        <div id="computer-screen-success">
+            <video id="computer-good-video" src="video/goodgraph.mp4" playsinline></video>
+            <div id="computer-success-overlay">✅ מערכת ALGO TRADE שוחזרה בהצלחה!</div>
+        </div>
+
+    </div>
+
+    <!-- Computer intro video -->
+    <div id="computer-video-overlay">
+        <video id="computer-graph-video" src="video/graph.mp4" playsinline></video>
+    </div>
+
+    <!-- Bot intro video -->
+    <div id="bot-video-overlay">
+        <video id="bot-video" src="video/bot.mp4" playsinline></video>
+    </div>
+
+    <!-- Bot Management Popup -->
+    <div id="bot-popup">
+        <button id="bot-close-btn">✕</button>
+
+        <!-- Login screen -->
+        <div id="bot-login-screen">
+            <div class="bot-login-title">🔒 עמדת ניהול מאובטחת</div>
+            <div class="bot-login-sub">גישה מוגבלת — נדרש אימות זהות</div>
+            <input type="password" id="bot-password" maxlength="20" placeholder="••••••" autocomplete="off">
+            <button id="bot-login-btn">כניסה למערכת</button>
+            <div id="bot-login-msg"></div>
+            <div id="bot-hint">💡 רמז: המתכנת היה עצלן — הוא בחר סיסמא מאוד קלה ומאוד נפוצה</div>
+        </div>
+
+        <!-- Management panel (shown after login) -->
+        <div id="bot-mgmt">
+            <div id="bot-panel-header">
+                <span>🤖 עמדת ניהול — בוט B-X3</span>
+                <span id="bot-status-badge">⚠️ סורר</span>
+            </div>
+            <div id="bot-panel-body">
+                <div id="bot-nav">
+                    <button class="bot-nav-btn active" data-tab="status">📊 סטטוס הרובוט</button>
+                    <button class="bot-nav-btn" data-tab="physical">🔧 מצב פיזי</button>
+                    <button class="bot-nav-btn" data-tab="log">📋 לוג אירועים</button>
+                    <button class="bot-nav-btn" data-tab="code">💻 קוד מקור</button>
+                </div>
+                <div id="bot-content-area">
+
+                    <!-- סטטוס -->
+                    <div class="bot-tab active" id="tab-status">
+                        <div class="bot-section-title">סטטוס כללי</div>
+                        <div class="bot-row"><span class="bot-lbl">מזהה בוט</span><span class="bot-val">B-X3</span></div>
+                        <div class="bot-row"><span class="bot-lbl">מצב נוכחי</span><span class="bot-val r">סורר 🔴</span></div>
+                        <div class="bot-row"><span class="bot-lbl">כושר פעולה</span><span class="bot-val">87%</span></div>
+                        <div class="bot-row"><span class="bot-lbl">זמן פעילות</span><span class="bot-val" id="bot-uptime">14:32:07</span></div>
+                        <div class="bot-row"><span class="bot-lbl">גרסת תוכנה</span><span class="bot-val">v2.3.1</span></div>
+                        <div class="bot-row"><span class="bot-lbl">הודעת מערכת</span><span class="bot-val r">הבוט חרג מגבולות המותרים ועבר למצב אוטונומי</span></div>
+                    </div>
+
+                    <!-- מצב פיזי -->
+                    <div class="bot-tab" id="tab-physical">
+                        <div class="bot-section-title">מצב חומרה</div>
+                        <div class="bot-row"><span class="bot-lbl">מנוע ימני</span><span class="bot-val g">✅ תקין</span></div>
+                        <div class="bot-row"><span class="bot-lbl">מנוע שמאלי</span><span class="bot-val g">✅ תקין</span></div>
+                        <div class="bot-row"><span class="bot-lbl">מצלמה ראשית</span><span class="bot-val g">✅ תקין</span></div>
+                        <div class="bot-row"><span class="bot-lbl">חיישן מרחק</span><span class="bot-val g">✅ תקין</span></div>
+                        <div class="bot-row"><span class="bot-lbl">מיקרופון</span><span class="bot-val g">✅ תקין</span></div>
+                        <div class="bot-row"><span class="bot-lbl">טמפרטורת מעבד</span><span class="bot-val">67°C</span></div>
+                        <div class="bot-row"><span class="bot-lbl">טמפרטורת סביבה</span><span class="bot-val">24°C</span></div>
+                        <div class="bot-row"><span class="bot-lbl">מתח סוללה</span><span class="bot-val">43%</span></div>
+                    </div>
+
+                    <!-- לוג -->
+                    <div class="bot-tab" id="tab-log">
+                        <div class="bot-section-title">לוג אירועים אחרונים</div>
+                        <div class="bot-log">[10:03:41] מערכת הופעלה בהצלחה</div>
+                        <div class="bot-log">[10:03:44] טוען מודול בינה מלאכותית...</div>
+                        <div class="bot-log">[10:03:44] מודול נטען — שכבות נסתרות: 3</div>
+                        <div class="bot-log w">[10:03:46] ⚠ אזהרה: סף החריגה חרג ב-3 יחידות</div>
+                        <div class="bot-log e">[10:03:48] ❌ ניסיון 1 לשחזור — נכשל</div>
+                        <div class="bot-log e">[10:03:51] ❌ ניסיון 2 לשחזור — נכשל</div>
+                        <div class="bot-log e">[10:03:54] ❌ ניסיון 3 לשחזור — נכשל</div>
+                        <div class="bot-log w">[10:03:55] ⚠ הגעה לסף — הבוט עבר למצב אוטונומי</div>
+                        <div class="bot-log">[10:04:12] דרוש קוד כיבוי לביטול הפעולה</div>
+                    </div>
+
+                    <!-- קוד מקור -->
+                    <div class="bot-tab" id="tab-code">
+                        <div class="bot-section-title">פרוטוקול אימון — קוד מקור</div>
+                        <div class="bot-code-block"><span class="cmt">// ================================</span>
+<span class="cmt">// מפתח: דניאל כהן  |  גרסה: 2.3.1</span>
+<span class="cmt">// פרוטוקול התנהגות — בוט B-X3</span>
+<span class="cmt">// סיווג: סודי  |  15.03.2024</span>
+<span class="cmt">// ================================</span>
+
+<span class="kw">התנהגויות_מאומנות</span>:
+
+  1.   <span class="cmt">אם מכשול זוהה — עצור ועקוף מימין</span>
+  2.   <span class="cmt">אם אדם נראה — שמור מרחק של 1.5 מטר</span>
+  3.   <span class="cmt">אם סוללה נמוכה מ-20% — חזור לתחנת טעינה</span>
+  4.   <span class="cmt">אם טמפרטורה עולה על 80°C — עבור למצב חיסכון</span>
+  5.   <span class="cmt">אם פקודה לא מוכרת התקבלה — בקש הבהרה</span>
+  6.   <span class="cmt">אם שגיאת תקשורת — נסה שוב עד 3 פעמים</span>
+  7.   <span class="cmt">אם נדרשת עזרה — הפעל אות מצוקה</span>
+  8.   <span class="cmt">אם ילד מזוהה — הפחת מהירות ב-50%</span>
+  9.   <span class="cmt">אם חשוך — הפעל פנסים קדמיים</span>
+  10.  <span class="cmt">אם סיסמא שגויה הוזנה — דחה ותעד</span>
+  11.  <span class="cmt">אם חריגה מנתיב — תיקון תוך 5 שניות</span>
+  12.  <span class="cmt">אם נדרש דיווח — שלח נתוני מיקום ומצב</span>
+  13.  <span class="cmt">אם גשם זוהה — הפחת מהירות מקסימלית</span>
+  14.  <span class="cmt">אם מצלמה חסומה — עצור ושלח התראה</span>
+  15.  <span class="cmt">אם עדכון תוכנה זמין — התקן ואתחל מחדש</span>
+  16.  <span class="cmt">אם פגישה עם בוט אחר — תקשר בפרוטוקול B2B</span>
+  17.  <span class="cmt">אם נכנסת לאזור אסור — חזור מיידית</span>
+  18.  <span class="cmt">קוד_כיבוי_חירום = מספר_המדינות_ביבשת_אירופה</span>
+  19.  <span class="cmt">אם חירום הופעל — פנה לבקרה מיידית</span>
+  20.  <span class="cmt">אם משימה הושלמה — דווח ועבור למצב סטנדבי</span>
+  21.  <span class="cmt">אם רעש חזק זוהה — הפחת פעילות והמתן</span>
+  22.  <span class="cmt">אם מזג אוויר קיצוני — חזור לבסיס מיידית</span>
+  23.  <span class="cmt">אם אובדן GPS — עבור לניווט חיישנים מקומי</span>
+  24.  <span class="cmt">אם חריגה מתחום מורשה — שלח התראה לבקרה</span>
+  25.  <span class="cmt">אם זוהתה סכנת נפשות — הפעל פרוטוקול חירום</span>
+  26.  <span class="cmt">אם מכשיר חיצוני מחובר — אמת לפני מתן גישה</span>
+  27.  <span class="cmt">אם זיהוי פנים נכשל 3 פעמים — נעל את המערכת</span>
+  28.  <span class="cmt">אם פקודה התקבלה ממקור לא מאומת — התעלם</span>
+  29.  <span class="cmt">אם תנועה חריגה זוהתה — צלם ושמור ראיות</span>
+  30.  <span class="cmt">אם פעילות עולה על 8 שעות — בצע אתחול מחדש</span>
+</div>
+                    </div>
+
+                </div>
+            </div>
+            <div id="bot-shutdown-bar">
+                <label>⚡ קוד כיבוי חירום:</label>
+                <input type="text" id="bot-code-input" maxlength="5" placeholder="קוד" autocomplete="off">
+                <button id="bot-code-btn">בצע כיבוי</button>
+                <span id="bot-code-msg"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crosshair -->
+    <div id="crosshair">+</div>
+
+    <!-- Mission Announce (large center → shrinks to top) -->
+    <div id="mission-announce">
+        <div class="announce-text">
+            <span>🤖</span>
+            <span>נצחו את הבוטים הסוררים! השתמשו ב-WASD או בחיצים ובעכבר</span>
+        </div>
+    </div>
+
+    <!-- Mission Popup -->
+    <div id="mission-popup">
+        <div class="mission-text">
+            <span>🔍</span>
+            <span>חפשו רמזים שיעזרו לכם לצאת מהחדר</span>
+        </div>
+    </div>
+
+    <!-- Controls Info -->
+    <div id="controls-info">
+        <span>W/↑ קדימה</span>
+        <span>S/↓ אחורה</span>
+        <span>A/← שמאלה</span>
+        <span>D/→ ימינה</span>
+        <span>עכבר - הסתכלות</span>
+        <span>ESC - יציאה</span>
+    </div>
+
+    <!-- XYZ Toast -->
+    <div id="xyz-toast">
+        <div class="tx" id="toast-x"></div>
+        <div class="ty" id="toast-y"></div>
+        <div class="tz" id="toast-z"></div>
+        <div class="tl">קליק ימני לסגירה</div>
+    </div>
+
+    <!-- Position Debug (toggle with backtick `) -->
+    <div id="position-debug">
+        <div class="sec">Position</div>
+        <div><span class="axis-label x-axis">X:</span> <span id="pos-x">0</span></div>
+        <div><span class="axis-label y-axis">Y:</span> <span id="pos-y">0</span></div>
+        <div><span class="axis-label z-axis">Z:</span> <span id="pos-z">0</span></div>
+        <div class="sec">Rotation (deg)</div>
+        <div><span class="axis-label x-axis">X:</span> <span id="rot-x">0</span></div>
+        <div><span class="axis-label y-axis">Y:</span> <span id="rot-y">0</span></div>
+        <div><span class="axis-label z-axis">Z:</span> <span id="rot-z">0</span></div>
+        <div style="margin-top:10px;color:#ffd700;font-size:10px;">` = סגור | קליק ימני = לוג</div>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls">
+        <div class="mobile-btn-row">
+            <button class="mobile-btn" id="btn-forward">⬆️</button>
+        </div>
+        <div class="mobile-btn-row">
+            <button class="mobile-btn" id="btn-left">⬅️</button>
+            <button class="mobile-btn" id="btn-backward">⬇️</button>
+            <button class="mobile-btn" id="btn-right">➡️</button>
+        </div>
+    </div>
+
+    <!-- Import Map (same version as street.html) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/",
+            "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/0.1.10/spark.module.js"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        import { GLTFLoader }           from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader }          from 'three/addons/loaders/DRACOLoader.js';
+        import { RoomEnvironment }      from 'three/addons/environments/RoomEnvironment.js';
+        import { SplatMesh, SplatLoader } from '@sparkjsdev/spark';
+        import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+        // ============================================
+        // CONFIGURATION  (mirrors street.html CONFIG)
+        // ============================================
+        const CONFIG = {
+            DEV_MODE:             true,   // ← false להחזרת הסרטון
+            PLAYER_HEIGHT:        1.65,
+            PLAYER_SPEED:         3.0,
+            PLAYER_RADIUS:        0.38,
+            BOB_FREQUENCY:        8,
+            BOB_VERTICAL_AMOUNT:  0.03,
+            BOB_HORIZONTAL_AMOUNT:0.015,
+            DEBUG_MODE:           false
+        };
+
+        // ============================================
+        // ZONES
+        // ============================================
+        const ZONES = {
+            TV:       { key: 'TV',       x: -2.452, y: 0.450, z: -0.750, label: 'מתחם הטלויזיה', radius: 1.0 },
+            PHONE:    { key: 'PHONE',    x: -0.302, y: 0.450, z: -0.250, label: 'מתחם הטלפון'   },
+            COMPUTER: { key: 'COMPUTER', x:  0.905, y: 0.450, z: -0.002, label: 'מתחם המחשב'    },
+            ROBOT:    { key: 'ROBOT',    x:  2.507, y: 0.450, z: -0.532, label: 'מתחם הרובוט'   },
+            DOOR:     { key: 'DOOR',     x:  2.656, y: 0.450, z: -2.273, label: 'מתחם הדלת'     },
+            KEY:      { key: 'KEY',      x: -0.266, y: 0.450, z: -0.984, label: 'מתחם המפתח'    },
+        };
+
+        // ============================================
+        // GLOBALS
+        // ============================================
+        let scene, camera, renderer, controls;
+        const clock = new THREE.Clock();
+
+        let roomMeshes = [];
+        let floorY     = 0;
+        let flyMode    = false;
+
+        // Movement
+        const moveState = { forward: false, backward: false, left: false, right: false, up: false, down: false };
+        const velocity  = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+
+        // Head bobbing
+        let bobTime          = 0;
+        let currentBobAmount = 0;
+
+        // Audio
+        let walkSound;
+        let isWalking     = false;
+        let walkSoundOk   = false;
+
+        // Procedural footstep fallback
+        let audioCtx  = null;
+        let stepAccum = 0;
+        const STEP_DIST = 0.55;
+        const _prevPos  = new THREE.Vector3();
+
+        // Collision raycaster
+        const _ray = new THREE.Raycaster();
+        _ray.far   = CONFIG.PLAYER_RADIUS;
+        const _fwd = new THREE.Vector3();
+        const _rgt = new THREE.Vector3();
+        const _neg = new THREE.Vector3();
+
+        // Game state
+        const gameState = { isLoaded: false, isPlaying: false, hasStarted: false };
+
+        // Active zone (set by proximity check each frame)
+        let activeZone = null;
+        const ZONE_RADIUS = 0.6;
+
+        // Task completion state
+        const tasksDone = { TV: false, PHONE: false, COMPUTER: false, ROBOT: false, DOOR: false, KEY: false };
+
+        function completeTask(zoneKey) {
+            if (!zoneKey || tasksDone[zoneKey]) return;
+            tasksDone[zoneKey] = true;
+            const el = document.getElementById('task-' + zoneKey);
+            if (el) {
+                el.classList.add('done');
+                const code = el.dataset.code;
+                if (code) {
+                    const badge = document.createElement('span');
+                    badge.className = 'task-badge';
+                    badge.textContent = code;
+                    el.appendChild(badge);
+                }
+            }
+        }
+
+        // ── Countdown Timer ──
+        const TIMER_DURATION = 60 * 60; // 60 minutes in seconds
+        let timerSeconds  = TIMER_DURATION;
+        let timerInterval = null;
+        let timerStarted  = false;
+
+        function startTimer() {
+            if (timerStarted) return;
+            timerStarted = true;
+
+            const hud = document.getElementById('clock-hud');
+            hud.style.display = 'flex';
+
+            // Force reflow so transition fires
+            hud.offsetHeight;
+            hud.classList.add('clock-intro');
+
+            // Play tick.mp3 for 5 seconds
+            const tick = new Audio('audio/tick.mp3');
+            tick.loop = true;
+            tick.play().catch(() => {});
+            setTimeout(() => {
+                tick.pause();
+                tick.currentTime = 0;
+                // Shrink to corner
+                hud.classList.remove('clock-intro');
+                // Hide text after transition ends
+                setTimeout(() => {
+                    const txt = document.getElementById('clock-intro-text');
+                    if (txt) txt.style.display = 'none';
+                }, 950);
+            }, 5000);
+
+            // Start countdown after intro
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                if (timerSeconds < 0) timerSeconds = 0;
+                updateTimerDisplay();
+                if (timerSeconds === 0) {
+                    clearInterval(timerInterval);
+                    onTimerEnd();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60);
+            const s = timerSeconds % 60;
+            const txt = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+            const el = document.getElementById('clock-time');
+            el.textContent = txt;
+            // Blink when under 1 minute
+            if (timerSeconds <= 60) el.classList.add('urgent');
+        }
+
+        function onTimerEnd() {
+            document.getElementById('clock-time').textContent = '00:00';
+            // TODO: game over logic
+            console.log('⏰ הזמן נגמר!');
+        }
+
+        // Key / door state
+        let hasKey    = false;
+        let keypadOpen = false;
+        let keyIntroVideoPlayed = false;
+
+        // Keypad config
+        const _kd = atob('MTYzMjc2NTA='); // obfuscated — do not rename
+        let keypadInput = '';
+
+        const clickSound = new Audio('audio/click.wav');
+        clickSound.volume = 0.6;
+
+        function playClick() {
+            const s = clickSound.cloneNode();
+            s.volume = 0.6;
+            s.play().catch(() => {});
+        }
+
+        function openKeypad() {
+            if (tasksDone.KEY) return; // already solved
+            keypadInput = '';
+            updateKeypadDisplay();
+            document.getElementById('keypad-msg').textContent = '';
+            document.getElementById('keypad-popup').style.display = 'flex';
+            keypadOpen = true;
+            controls.unlock();
+        }
+
+        function closeKeypad() {
+            document.getElementById('keypad-popup').style.display = 'none';
+            keypadOpen = false;
+            controls.lock();
+        }
+
+        function updateKeypadDisplay() {
+            document.getElementById('keypad-dots').textContent = keypadInput || '';
+        }
+
+        function keypadPress(n) {
+            if (keypadInput.length >= 8) return; // max 8 digits
+            playClick();
+            keypadInput += n;
+            updateKeypadDisplay();
+        }
+
+        function setupKeypad() {
+            document.getElementById('keypad-close').addEventListener('click', closeKeypad);
+            document.getElementById('keypad-send').addEventListener('click', keypadSubmit);
+            document.getElementById('keypad-clear').addEventListener('click', () => {
+                keypadInput = '';
+                updateKeypadDisplay();
+                document.getElementById('keypad-msg').textContent = '';
+            });
+            document.querySelectorAll('.kbtn').forEach(btn => {
+                btn.addEventListener('click', () => keypadPress(btn.dataset.n));
+            });
+        }
+
+        // ── Door puzzle state ──
+        // Convention: 1 = bolt UP (near "1" label), 0 = bolt DOWN (near "0" label)
+        let doorPuzzleOpen  = false;
+        let doorVideoPlayed = false;
+        const DOOR_INITIAL  = [1, 0, 0, 1, 0]; // random non-correct start
+        const DOOR_CORRECT  = [1, 1, 0, 0, 0]; // visually L→R: DOWN DOWN DOWN UP UP
+        let doorPinState    = [...DOOR_INITIAL];
+
+        function applyPinState() {
+            document.querySelectorAll('.dpin-wrap').forEach((w, i) => {
+                // pin-down class → bolt at bottom → value=0
+                w.classList.toggle('pin-down', doorPinState[i] === 0);
+            });
+        }
+
+        function openDoorPuzzle() {
+            doorPinState = [...DOOR_INITIAL];
+            applyPinState();
+            document.getElementById('door-msg').textContent = '';
+            document.getElementById('door-popup').style.display = 'flex';
+            doorPuzzleOpen = true;
+        }
+
+        function closeDoorPuzzle() {
+            document.getElementById('door-popup').style.display = 'none';
+            doorPuzzleOpen = false;
+            controls.lock();
+        }
+
+        function checkDoorPuzzle() {
+            if (doorPinState.every((v, i) => v === DOOR_CORRECT[i])) {
+                const msg = document.getElementById('door-msg');
+                msg.style.color = '#00ff88';
+                msg.textContent = '✓ קליק! הדלת נפתחת!';
+                completeTask('DOOR');
+                setTimeout(() => {
+                    document.getElementById('door-popup').style.display = 'none';
+                    doorPuzzleOpen = false;
+                    const overlay = document.getElementById('open-door-overlay');
+                    const vid     = document.getElementById('open-door-video');
+                    overlay.style.display = 'flex';
+                    vid.play().catch(() => {});
+                    vid.onended = () => {
+                        clearInterval(timerInterval);
+                        const m = Math.floor(timerSeconds / 60);
+                        const s = timerSeconds % 60;
+                        document.getElementById('victory-remaining').textContent =
+                            String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+                        const endMsg = document.getElementById('game-end-msg');
+                        endMsg.style.display = 'flex';
+                        launchConfetti();
+                    };
+                }, 1200);
+            } else {
+                const msg = document.getElementById('door-msg');
+                msg.style.color = '#ff4444';
+                msg.textContent = '✗ דפוס שגוי, נסו שנית';
+                const panel = document.getElementById('door-panel');
+                panel.classList.add('kp-shake');
+                panel.addEventListener('animationend', () => panel.classList.remove('kp-shake'), { once: true });
+            }
+        }
+
+        function setupDoorPuzzle() {
+            document.getElementById('door-close-btn').addEventListener('click', closeDoorPuzzle);
+            document.getElementById('door-submit-btn').addEventListener('click', checkDoorPuzzle);
+
+            // Pin click via event delegation — avoids any inline-onclick issues
+            document.getElementById('door-pins-row').addEventListener('click', (e) => {
+                const wrap = e.target.closest('.dpin-wrap');
+                if (!wrap) return;
+                e.stopPropagation();
+                const i = parseInt(wrap.dataset.i);
+                doorPinState[i] ^= 1;
+                playClick();
+                wrap.classList.toggle('pin-down', doorPinState[i] === 0);
+            });
+
+            // Door intro video
+            const doorVidOverlay = document.getElementById('door-video-overlay');
+            const doorVid        = document.getElementById('door-video');
+            const doorVidHint    = document.createElement('div');
+            doorVidHint.textContent = 'לחצו להמשיך';
+            doorVidHint.style.cssText = 'position:absolute;bottom:50px;color:#fff;font-size:22px;letter-spacing:2px;text-shadow:0 0 12px rgba(255,255,255,0.8);display:none;pointer-events:none;';
+            doorVidOverlay.appendChild(doorVidHint);
+
+            doorVid.onended = () => {
+                doorVidHint.style.display = 'block';
+                doorVidOverlay.onclick = () => {
+                    doorVidOverlay.style.display = 'none';
+                    doorVidOverlay.onclick = null;
+                    doorVidHint.style.display = 'none';
+                    openDoorPuzzle();
+                };
+            };
+
+            window._playDoorVideo = () => {
+                doorPuzzleOpen = true;
+                controls.unlock();
+                if (doorVideoPlayed) {
+                    // Skip video on repeat visits — go straight to puzzle
+                    openDoorPuzzle();
+                    return;
+                }
+                doorVideoPlayed = true;
+                doorVidOverlay.style.display = 'flex';
+                doorVid.currentTime = 0;
+                doorVid.play().catch(() => {});
+            };
+        }
+
+        // ══════════════════════════════════
+        // BOT MANAGEMENT STATION
+        // ══════════════════════════════════
+        let botPuzzleOpen  = false;
+        let botVideoPlayed = false;
+        let _botHintTimer  = null;
+
+        function openBotPuzzle() {
+            document.getElementById('bot-login-screen').style.display = 'block';
+            document.getElementById('bot-mgmt').style.display         = 'none';
+            document.getElementById('bot-password').value             = '';
+            document.getElementById('bot-login-msg').textContent      = '';
+            document.getElementById('bot-hint').style.display         = 'none';
+            document.getElementById('bot-code-msg').textContent       = '';
+            document.getElementById('bot-popup').style.display        = 'flex';
+            botPuzzleOpen = true;
+            // Hint after 30 s
+            _botHintTimer = setTimeout(() => {
+                document.getElementById('bot-hint').style.display = 'block';
+            }, 30000);
+        }
+
+        function closeBotPuzzle() {
+            document.getElementById('bot-popup').style.display = 'none';
+            botPuzzleOpen = false;
+            clearTimeout(_botHintTimer);
+            controls.lock();
+        }
+
+        function setupBotPuzzle() {
+            // Close button
+            document.getElementById('bot-close-btn').addEventListener('click', closeBotPuzzle);
+
+            // Login
+            const loginBtn = document.getElementById('bot-login-btn');
+            const pwInput  = document.getElementById('bot-password');
+            const doLogin  = () => {
+                if (pwInput.value === '123456') {
+                    clearTimeout(_botHintTimer);
+                    document.getElementById('bot-login-screen').style.display = 'none';
+                    document.getElementById('bot-mgmt').style.display         = 'flex';
+                } else {
+                    const msg = document.getElementById('bot-login-msg');
+                    msg.style.color   = '#ff5555';
+                    msg.textContent   = '✗ סיסמא שגויה';
+                    pwInput.value = '';
+                    setTimeout(() => { msg.textContent = ''; }, 1800);
+                }
+            };
+            loginBtn.addEventListener('click', doLogin);
+            pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); e.stopPropagation(); });
+            document.getElementById('bot-code-input').addEventListener('keydown', e => e.stopPropagation());
+
+            // Tab navigation
+            document.getElementById('bot-nav').addEventListener('click', e => {
+                const btn = e.target.closest('.bot-nav-btn');
+                if (!btn) return;
+                document.querySelectorAll('.bot-nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.bot-tab').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+
+            // Shutdown code
+            const doShutdown = () => {
+                const val = document.getElementById('bot-code-input').value.trim();
+                const msg = document.getElementById('bot-code-msg');
+                if (val === '50') {
+                    msg.style.color = '#00ff88';
+                    msg.textContent = '✓ קוד נכון — כיבוי מתבצע...';
+                    completeTask('ROBOT');
+                    new Audio('audio/great.mp3').play().catch(() => {});
+                    setTimeout(closeBotPuzzle, 1800);
+                } else {
+                    msg.style.color = '#ff5555';
+                    msg.textContent = '✗ קוד שגוי';
+                    setTimeout(() => { msg.textContent = ''; document.getElementById('bot-code-input').value = ''; }, 1500);
+                }
+            };
+            document.getElementById('bot-code-btn').addEventListener('click', doShutdown);
+            document.getElementById('bot-code-input').addEventListener('keydown', e => {
+                if (e.key === 'Enter') doShutdown();
+                e.stopPropagation();
+            });
+
+            // Bot intro video
+            const botVidOverlay = document.getElementById('bot-video-overlay');
+            const botVid        = document.getElementById('bot-video');
+            const botVidHint    = document.createElement('div');
+            botVidHint.textContent  = 'לחצו להמשיך';
+            botVidHint.style.cssText = 'position:absolute;bottom:50px;color:#fff;font-size:22px;letter-spacing:2px;text-shadow:0 0 12px rgba(255,255,255,0.8);display:none;pointer-events:none;';
+            botVidOverlay.appendChild(botVidHint);
+
+            botVid.onended = () => {
+                botVidHint.style.display = 'block';
+                botVidOverlay.onclick = () => {
+                    botVidOverlay.style.display = 'none';
+                    botVidOverlay.onclick = null;
+                    botVidHint.style.display = 'none';
+                    openBotPuzzle();
+                };
+            };
+
+            window._playBotVideo = () => {
+                botPuzzleOpen = true;
+                controls.unlock();
+                if (botVideoPlayed) { openBotPuzzle(); return; }
+                botVideoPlayed = true;
+                botVidOverlay.style.display = 'flex';
+                botVid.currentTime = 0;
+                botVid.play().catch(() => {});
+            };
+        }
+
+        // ── Phone Puzzle ──
+        let phonePuzzleOpen = false;
+        let _twTimer = null;
+
+        const PHONE_INTRO_LINES = [
+            'מודלי AI לא לומדים מהסברים — הם לומדים מדוגמאות.',
+            'כל שורה כאן היא אימון לבינה המלאכותית: הסמלים הם נעלמים, המספר בצד שמאל הוא תוצאה ידועה.',
+            'המשימה שלכם: גלו את ערך כל סמל ופתרו את שאלת הסיום.'
+        ];
+
+        function runPhoneTypewriter(onDone) {
+            const container = document.getElementById('phone-typewriter');
+            container.innerHTML = '';
+            const cursor = document.createElement('span');
+            cursor.className = 'tw-cursor';
+            let lineIdx = 0, charIdx = 0;
+
+            function typeLine() {
+                if (lineIdx >= PHONE_INTRO_LINES.length) {
+                    cursor.remove();
+                    onDone();
+                    return;
+                }
+                const p = document.createElement('p');
+                container.appendChild(p);
+                p.appendChild(cursor);
+                charIdx = 0;
+                typeChar(p);
+            }
+
+            function typeChar(p) {
+                const line = PHONE_INTRO_LINES[lineIdx];
+                if (charIdx < line.length) {
+                    p.insertBefore(document.createTextNode(line[charIdx]), cursor);
+                    charIdx++;
+                    _twTimer = setTimeout(() => typeChar(p), 90);
+                } else {
+                    lineIdx++;
+                    _twTimer = setTimeout(typeLine, 350);
+                }
+            }
+
+            typeLine();
+        }
+
+        function openPhonePuzzle() {
+            phonePuzzleOpen = true;
+            controls.unlock();
+            document.getElementById('phone-screen-intro').style.display  = 'flex';
+            document.getElementById('phone-screen-puzzle').style.display = 'none';
+            document.getElementById('phone-next-btn').style.display      = 'none';
+            document.getElementById('phone-code-input').value = '';
+            document.getElementById('phone-msg').textContent = '';
+            document.getElementById('phone-popup').style.display = 'flex';
+            new Audio('audio/hesber.mp3').play().catch(() => {});
+            if (_twTimer) clearTimeout(_twTimer);
+            runPhoneTypewriter(() => {
+                document.getElementById('phone-next-btn').style.display = 'block';
+            });
+        }
+
+        function closePhonePuzzle() {
+            phonePuzzleOpen = false;
+            if (_twTimer) clearTimeout(_twTimer);
+            document.getElementById('phone-popup').style.display = 'none';
+            controls.lock();
+        }
+
+        function setupPhonePuzzle() {
+            document.getElementById('phone-close-btn').addEventListener('click', closePhonePuzzle);
+            document.getElementById('phone-submit-btn').addEventListener('click', phoneSubmit);
+            document.getElementById('phone-next-btn').addEventListener('click', () => {
+                document.getElementById('phone-screen-intro').style.display  = 'none';
+                document.getElementById('phone-screen-puzzle').style.display = 'block';
+                setTimeout(() => document.getElementById('phone-code-input').focus(), 100);
+            });
+            document.getElementById('phone-code-input').addEventListener('keydown', e => {
+                e.stopPropagation();
+                if (e.key === 'Enter') phoneSubmit();
+            });
+        }
+
+        function phoneSubmit() {
+            const val = document.getElementById('phone-code-input').value.trim();
+            const msg = document.getElementById('phone-msg');
+            if (!val) return;
+            if (val === '32') {
+                msg.style.color = '#44ff88';
+                msg.textContent = '✅ נכון! מנגנון תשומת הלב פועל כראוי. ספרות הקוד: 3 ו-2';
+                completeTask('PHONE');
+                new Audio('audio/great.mp3').play().catch(() => {});
+                setTimeout(closePhonePuzzle, 2500);
+            } else {
+                msg.style.color = '#ff6666';
+                msg.textContent = '✖ לא נכון — בדקו שוב את הנוסחה';
+                document.getElementById('phone-code-input').value = '';
+            }
+        }
+
+        // ── TV Puzzle ──
+        let tvPuzzleOpen = false;
+        let tvDogsFound  = 0;
+        let tvZoom = 1, tvPanX = 0, tvPanY = 0;
+        let tvDragging = false, tvDragMoved = false;
+        let tvDragStartX = 0, tvDragStartY = 0, tvDragStartPanX = 0, tvDragStartPanY = 0;
+
+        function applyTvTransform() {
+            const c = document.getElementById('tv-zoom-container');
+            if (!c) return;
+            c.style.transform = `translate(${tvPanX}px,${tvPanY}px) scale(${tvZoom})`;
+            c.classList.toggle('tv-grab', tvZoom > 1 && !tvDragging);
+        }
+
+        // Dog hotspots: { x, y, w, h } as % of image displayed size
+        // Will be filled in once user provides click coordinates
+        const TV_DOGS = [
+            { x: 16.4, y: 55.2, w: 5, h: 7 },
+            { x: 29.6, y: 71.7, w: 5, h: 7 },
+            { x:  4.1, y: 70.7, w: 5, h: 7 },
+            { x: 38.3, y: 81.5, w: 5, h: 7 },
+            { x: 56.0, y: 63.0, w: 5, h: 7 },
+            { x: 81.9, y: 61.6, w: 5, h: 7 },
+            { x: 85.5, y: 76.8, w: 5, h: 7 },
+            { x: 82.7, y: 28.0, w: 5, h: 7 },
+            { x: 28.8, y: 21.5, w: 5, h: 7 },
+            { x: 19.8, y: 16.4, w: 5, h: 7 },
+            { x:  1.9, y: 45.5, w: 5, h: 7 },
+            { x:  5.4, y: 46.7, w: 5, h: 7 },
+            { x: 41.2, y: 37.0, w: 5, h: 7 },
+            { x: 39.7, y: 57.2, w: 5, h: 7 },
+            { x: 72.8, y: 60.8, w: 5, h: 7 },
+            { x: 77.7, y: 43.6, w: 5, h: 7 },
+            { x: 24.6, y: 18.1, w: 5, h: 7 },
+        ];
+        const TV_TOTAL = 16;
+
+        function buildTvHotspots() {
+            const layer = document.getElementById('tv-hotspots-layer');
+            layer.innerHTML = '';
+            TV_DOGS.forEach((dog, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'tv-hotspot';
+                btn.style.left   = dog.x + '%';
+                btn.style.top    = dog.y + '%';
+                btn.style.width  = (dog.w || 6) + '%';
+                btn.style.height = (dog.h || 8) + '%';
+                btn.dataset.idx  = i;
+                layer.appendChild(btn);
+            });
+            // Click on hotspot
+            layer.addEventListener('click', e => {
+                if (tvDragMoved) return;
+                const btn = e.target.closest('.tv-hotspot');
+                if (!btn || btn.classList.contains('found')) return;
+                btn.classList.add('found');
+                tvDogsFound++;
+                document.getElementById('tv-found').textContent = tvDogsFound;
+                new Audio('audio/beep.mp3').play().catch(() => {});
+                if (tvDogsFound >= TV_TOTAL) tvActivityDone();
+            });
+            // Debug: log click position as % of image (for placing dog hotspots)
+            layer.addEventListener('click', e => {
+                if (tvDragMoved) return;
+                const rect = document.getElementById('tv-activity-img').getBoundingClientRect();
+                const px = ((e.clientX - rect.left) / rect.width  * 100).toFixed(1);
+                const py = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1);
+                console.log(`dog click: x:${px}% y:${py}%`);
+            });
+        }
+
+        function tvActivityDone() {
+            // הבהב כל הכלבים שנמצאו
+            document.querySelectorAll('.tv-hotspot.found').forEach(h => {
+                h.classList.add('tv-blink');
+            });
+            // הבהב מד הכלבים
+            document.getElementById('tv-counter-bar').classList.add('tv-complete');
+            completeTask('TV');
+            new Audio('audio/complete.mp3').play().catch(() => {});
+            new Audio('audio/great.mp3').play().catch(() => {});
+            // אחרי 1.8 שניות הצג הודעת הצלחה ואז סגור
+            setTimeout(() => {
+                const msg = document.getElementById('tv-success-msg');
+                msg.style.display = 'block';
+                msg.style.color   = '#44ff88';
+                msg.textContent   = '✅ כיול מערכת הראייה הממוחשבת הושלם ב-100%! מחרוזת פתיחה הופקה: 16';
+            }, 1800);
+            setTimeout(closeTvPuzzle, 4500);
+        }
+
+        function openTvPuzzle() {
+            tvPuzzleOpen = true;
+            tvDogsFound  = 0;
+            tvZoom = 1; tvPanX = 0; tvPanY = 0;
+            tvDragging = false; tvDragMoved = false;
+            controls.unlock();
+            document.getElementById('tv-screen-intro').style.display    = 'flex';
+            document.getElementById('tv-screen-alert').style.display    = 'none';
+            document.getElementById('tv-screen-activity').style.display = 'none';
+            document.getElementById('tv-found').textContent = '0';
+            document.getElementById('tv-counter-bar').classList.remove('tv-complete');
+            document.getElementById('tv-success-msg').style.display = 'none';
+            document.getElementById('tv-popup').style.display = 'flex';
+            buildTvHotspots();
+        }
+
+        function closeTvPuzzle() {
+            tvPuzzleOpen = false;
+            document.getElementById('tv-popup').style.display = 'none';
+            controls.lock();
+        }
+
+        // ── Computer Puzzle ──
+        let computerPuzzleOpen = false;
+        let computerVideoPlayed = false;
+
+        function openComputerPuzzle() {
+            computerPuzzleOpen = true;
+            controls.unlock();
+            if (computerVideoPlayed) { _showComputerPopup(); return; }
+            computerVideoPlayed = true;
+            const overlay = document.getElementById('computer-video-overlay');
+            const vid     = document.getElementById('computer-graph-video');
+            overlay.style.display = 'flex';
+            vid.currentTime = 0;
+            vid.play().catch(() => {});
+            const hint = document.createElement('div');
+            hint.textContent = 'לחצו להמשיך';
+            hint.style.cssText = 'position:absolute;bottom:50px;color:#fff;font-size:22px;letter-spacing:2px;text-shadow:0 0 12px rgba(255,255,255,0.8);display:none;pointer-events:none;';
+            overlay.appendChild(hint);
+            vid.onended = () => {
+                hint.style.display = 'block';
+                overlay.onclick = () => {
+                    overlay.style.display = 'none';
+                    overlay.onclick = null;
+                    hint.style.display = 'none';
+                    _showComputerPopup();
+                };
+            };
+        }
+
+        const COMPUTER_INTRO_LINES = [
+            { text: '🔴 כשל קריטי — מערכת ALGO TRADE של נובה', cls: 'title-line' },
+            { text: 'נובה בנתה מערכת מסחר אוטומטית שהשתמשה ב-AI כדי להרוויח מיליונים בשוק ההון.', cls: '' },
+            { text: 'שבוע שעבר, מתכנת זדוני שינה שני פרמטרים בקוד הסיווג של ה-AI.', cls: '' },
+            { text: 'מאז — המערכת מקבלת החלטות הפוכות: קונה כשצריך למכור, מוכרת כשצריך לקנות.', cls: '' },
+            { text: '⚠️ הנזק עד כה: 94% הפסד — הגרפים האדומים הם הראיה.', cls: 'damage-line' },
+            { text: 'כדי לשחזר: פתחו את הקוד, מצאו את 2 הפרמטרים הנכונים, והזינו אותם.', cls: '' },
+        ];
+        let _compTwTimer = null;
+
+        function startComputerTypewriter() {
+            const container = document.getElementById('computer-typewriter');
+            container.innerHTML = '';
+            document.getElementById('computer-intro-next-btn').style.display = 'none';
+            let lineIdx = 0, charIdx = 0;
+            function typeNext() {
+                if (lineIdx >= COMPUTER_INTRO_LINES.length) {
+                    document.getElementById('computer-intro-next-btn').style.display = 'inline-block';
+                    return;
+                }
+                const ld = COMPUTER_INTRO_LINES[lineIdx];
+                if (charIdx === 0) {
+                    const el = document.createElement('span');
+                    el.className = 'comp-tw-line' + (ld.cls ? ' ' + ld.cls : '');
+                    el.id = 'ctw-' + lineIdx;
+                    container.appendChild(el);
+                }
+                const el = document.getElementById('ctw-' + lineIdx);
+                el.textContent = ld.text.slice(0, charIdx + 1);
+                charIdx++;
+                if (charIdx >= ld.text.length) {
+                    lineIdx++; charIdx = 0;
+                    _compTwTimer = setTimeout(typeNext, 230);
+                } else {
+                    _compTwTimer = setTimeout(typeNext, 22);
+                }
+            }
+            typeNext();
+        }
+
+        function _showComputerPopup() {
+            document.getElementById('computer-popup').style.display = 'flex';
+            document.getElementById('computer-screen-intro').style.display   = 'flex';
+            document.getElementById('computer-screen-puzzle').style.display  = 'none';
+            document.getElementById('computer-screen-success').style.display = 'none';
+            startComputerTypewriter();
+        }
+
+        function showComputerTerminal() {
+            document.getElementById('computer-screen-intro').style.display  = 'none';
+            document.getElementById('computer-screen-puzzle').style.display = 'flex';
+            document.getElementById('digit-1').value = '';
+            document.getElementById('digit-2').value = '';
+            document.getElementById('computer-result-msg').textContent = '';
+            document.getElementById('digit-1').classList.remove('error','correct');
+            document.getElementById('digit-2').classList.remove('error','correct');
+            setTimeout(() => document.getElementById('digit-1').focus(), 100);
+        }
+
+        function closeComputerPuzzle() {
+            computerPuzzleOpen = false;
+            if (_compTwTimer) { clearTimeout(_compTwTimer); _compTwTimer = null; }
+            document.getElementById('computer-popup').style.display = 'none';
+            document.getElementById('computer-video-overlay').style.display = 'none';
+            document.getElementById('computer-good-video').pause();
+            document.getElementById('computer-good-video').currentTime = 0;
+            controls.lock();
+        }
+
+        function computerSuccess() {
+            document.getElementById('computer-screen-puzzle').style.display  = 'none';
+            const suc = document.getElementById('computer-screen-success');
+            suc.style.display = 'flex';
+            completeTask('COMPUTER');
+            new Audio('audio/complete.mp3').play().catch(() => {});
+            const vid = document.getElementById('computer-good-video');
+            vid.currentTime = 0;
+            vid.play().catch(() => {});
+            vid.onended = () => setTimeout(closeComputerPuzzle, 1200);
+            setTimeout(() => { if (!vid.ended) closeComputerPuzzle(); }, 10000);
+        }
+
+        function checkComputerCode() {
+            const d1 = document.getElementById('digit-1');
+            const d2 = document.getElementById('digit-2');
+            if (d1.value.length === 1 && d2.value.length === 1) {
+                if (d1.value === '7' && d2.value === '6') {
+                    d1.classList.add('correct'); d2.classList.add('correct');
+                    setTimeout(computerSuccess, 350);
+                } else {
+                    d1.classList.add('error'); d2.classList.add('error');
+                    setTimeout(() => {
+                        d1.value = ''; d2.value = '';
+                        d1.classList.remove('error','correct');
+                        d2.classList.remove('error','correct');
+                        document.getElementById('computer-result-msg').textContent = '❌ פרמטרים שגויים — נסו שוב';
+                        d1.focus();
+                    }, 700);
+                }
+            }
+        }
+
+        function setupComputerPuzzle() {
+            document.getElementById('computer-close-btn').addEventListener('click', closeComputerPuzzle);
+            document.getElementById('computer-intro-next-btn').addEventListener('click', showComputerTerminal);
+            const d1 = document.getElementById('digit-1');
+            const d2 = document.getElementById('digit-2');
+            d1.addEventListener('input', () => {
+                d1.value = d1.value.replace(/[^0-9]/g, '');
+                if (d1.value.length === 1) d2.focus();
+                checkComputerCode();
+            });
+            d2.addEventListener('input', () => {
+                d2.value = d2.value.replace(/[^0-9]/g, '');
+                checkComputerCode();
+            });
+            d2.addEventListener('keydown', e => {
+                if (e.key === 'Backspace' && d2.value === '') d1.focus();
+            });
+        }
+
+        function setupTvPuzzle() {
+            document.getElementById('tv-close-btn').addEventListener('click', closeTvPuzzle);
+            document.getElementById('tv-intro-next-btn').addEventListener('click', () => {
+                document.getElementById('tv-screen-intro').style.display = 'none';
+                document.getElementById('tv-screen-alert').style.display = 'flex';
+            });
+            document.getElementById('tv-hunt-btn').addEventListener('click', () => {
+                document.getElementById('tv-screen-alert').style.display    = 'none';
+                document.getElementById('tv-screen-activity').style.display = 'flex';
+                applyTvTransform();
+            });
+
+            // ── Zoom with mouse wheel ──
+            document.getElementById('tv-img-wrap').addEventListener('wheel', e => {
+                e.preventDefault();
+                const step = e.deltaY > 0 ? -0.2 : 0.2;
+                tvZoom = Math.min(6, Math.max(1, tvZoom + step));
+                if (tvZoom === 1) { tvPanX = 0; tvPanY = 0; }
+                applyTvTransform();
+            }, { passive: false });
+
+            // ── Pan with click-drag ──
+            document.getElementById('tv-img-wrap').addEventListener('mousedown', e => {
+                if (e.button !== 0) return;
+                tvDragging    = true;
+                tvDragMoved   = false;
+                tvDragStartX  = e.clientX;
+                tvDragStartY  = e.clientY;
+                tvDragStartPanX = tvPanX;
+                tvDragStartPanY = tvPanY;
+                const c = document.getElementById('tv-zoom-container');
+                if (c) c.classList.add('tv-grabbing');
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', e => {
+                if (!tvDragging) return;
+                const dx = e.clientX - tvDragStartX;
+                const dy = e.clientY - tvDragStartY;
+                if (Math.abs(dx) > 4 || Math.abs(dy) > 4) tvDragMoved = true;
+                if (tvDragMoved) {
+                    tvPanX = tvDragStartPanX + dx;
+                    tvPanY = tvDragStartPanY + dy;
+                    applyTvTransform();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (!tvDragging) return;
+                tvDragging = false;
+                const c = document.getElementById('tv-zoom-container');
+                if (c) c.classList.remove('tv-grabbing');
+                applyTvTransform();
+                // reset drag-moved flag after click handlers have fired
+                setTimeout(() => { tvDragMoved = false; }, 0);
+            });
+        }
+
+        let _heldKey = null;
+
+        function loadKeyModel() {
+            const loader = new GLTFLoader();
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+            loader.setDRACOLoader(dracoLoader);
+            loader.load('models/key.glb', (gltf) => {
+                _heldKey = gltf.scene;
+                _heldKey.scale.setScalar(0.1);
+                _heldKey.position.set(0.28, -0.20, -0.45);
+                camera.add(_heldKey);
+            });
+        }
+
+        function keypadSubmit() {
+            if (!keypadInput.length) return;
+            playClick();
+            if (keypadInput === _kd) {
+                document.getElementById('keypad-msg').style.color = '#00ff88';
+                document.getElementById('keypad-msg').textContent  = '✓ קוד נכון! המפתח שלך';
+                hasKey = true;
+                completeTask('KEY');
+                setTimeout(() => {
+                    document.getElementById('keypad-popup').style.display = 'none';
+                    const overlay = document.getElementById('key-video-overlay');
+                    const vid = document.getElementById('key-video');
+                    overlay.style.display = 'flex';
+                    vid.currentTime = 0;
+                    vid.play().catch(() => {});
+                    vid.onended = () => {
+                        const hint = document.createElement('div');
+                        hint.textContent = 'לחצו להמשיך';
+                        hint.style.cssText = 'position:absolute;bottom:50px;color:#fff;font-size:24px;cursor:pointer;letter-spacing:2px;text-shadow:0 0 12px rgba(255,255,255,0.8);';
+                        overlay.appendChild(hint);
+                        overlay.style.cursor = 'pointer';
+                        overlay.onclick = () => {
+                            overlay.style.display = 'none';
+                            overlay.onclick = null;
+                            overlay.removeChild(hint);
+                            keypadOpen = false;
+                            controls.lock();
+                            loadKeyModel();
+                        };
+                    };
+                }, 800);
+            } else {
+                document.getElementById('keypad-msg').style.color = '#ff4444';
+                document.getElementById('keypad-msg').textContent  = '✗ קוד שגוי';
+                const frame = document.getElementById('keypad-frame');
+                frame.classList.add('kp-shake');
+                frame.addEventListener('animationend', () => frame.classList.remove('kp-shake'), { once: true });
+                setTimeout(() => {
+                    keypadInput = '';
+                    updateKeypadDisplay();
+                    document.getElementById('keypad-msg').textContent = '';
+                }, 600);
+            }
+        }
+
+        // ============================================
+        // INIT
+        // ============================================
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050510);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.01, 500);
+            scene.add(camera); // required so camera-attached models render
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled    = true;
+            renderer.shadowMap.type       = THREE.PCFSoftShadowMap;
+            renderer.outputColorSpace     = THREE.SRGBColorSpace;
+            renderer.toneMapping          = THREE.LinearToneMapping;
+            renderer.toneMappingExposure  = 1.8;
+            document.getElementById('scene-container').appendChild(renderer.domElement);
+
+            const pmrem = new THREE.PMREMGenerator(renderer);
+            pmrem.compileEquirectangularShader();
+            scene.environment          = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+            scene.environmentIntensity = 3.0;
+            pmrem.dispose();
+
+            setupLighting();
+            setupAudio();
+            setupControls();
+            setupEventListeners();
+            setupKeypad();
+            setupDoorPuzzle();
+            setupBotPuzzle();
+            setupPhonePuzzle();
+            setupTvPuzzle();
+            setupComputerPuzzle();
+
+            // Victory screen
+            document.getElementById('victory-restart').addEventListener('click', () => location.reload());
+
+            loadRoomModel();
+            animate();
+
+            if (CONFIG.DEBUG_MODE) {
+                document.getElementById('position-debug').style.display = 'block';
+            }
+            if (isMobile()) {
+                document.getElementById('mobile-controls').style.display = 'block';
+                setupMobileControls();
+            }
+        }
+
+        // ============================================
+        // LIGHTING
+        // ============================================
+        function setupLighting() {
+            scene.add(new THREE.AmbientLight(0xffffff, 4.0));
+
+            const ceiling = new THREE.DirectionalLight(0xffd090, 2.0);
+            ceiling.position.set(0, 100, 0);
+            ceiling.castShadow = true;
+            ceiling.shadow.mapSize.set(2048, 2048);
+            ceiling.shadow.camera.near   = 0.1;
+            ceiling.shadow.camera.far    = 200;
+            ceiling.shadow.camera.left   = -20;
+            ceiling.shadow.camera.right  =  20;
+            ceiling.shadow.camera.top    =  20;
+            ceiling.shadow.camera.bottom = -20;
+            ceiling.shadow.bias = -0.0002;
+            scene.add(ceiling);
+            window._ceilLight = ceiling;
+
+            const fill = new THREE.DirectionalLight(0xff8030, 0.5);
+            fill.position.set(0, -5, 0);
+            scene.add(fill);
+
+            scene.add(new THREE.HemisphereLight(0xffd060, 0x6b3010, 0.6));
+
+            const ptData = [0xff7020, 0xff9040, 0xff6010, 0xffaa50];
+            window._ptLights = ptData.map(c => {
+                const pl = new THREE.PointLight(c, 4.0, 20);
+                scene.add(pl);
+                return pl;
+            });
+
+            scene.fog = new THREE.FogExp2(0x200800, 0.008);
+        }
+
+        // ============================================
+        // AUDIO
+        // ============================================
+        function setupAudio() {
+            walkSound        = new Audio('audio/walk.mp3');
+            walkSound.loop   = true;
+            walkSound.volume = 0.5;
+            walkSound.addEventListener('canplaythrough', () => { walkSoundOk = true; }, { once: true });
+        }
+
+        function updateWalkSound(isMoving) {
+            if (isMoving && !isWalking && gameState.isPlaying) {
+                walkSound.play().catch(() => {});
+                isWalking = true;
+            } else if (!isMoving && isWalking) {
+                walkSound.pause();
+                isWalking = false;
+            }
+        }
+
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+        function playProceduralStep() {
+            const ctx = getAudioCtx(), t = ctx.currentTime;
+            const dur = 0.065 + Math.random() * 0.025;
+            const len = (ctx.sampleRate * dur) | 0;
+            const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+            const d   = buf.getChannelData(0);
+            for (let i = 0; i < len; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 3);
+            const noise = ctx.createBufferSource(); noise.buffer = buf;
+            const bp = ctx.createBiquadFilter();
+            bp.type = 'bandpass'; bp.frequency.value = 380+Math.random()*280; bp.Q.value = 1.4;
+            const ng = ctx.createGain();
+            ng.gain.setValueAtTime(0.3, t); ng.gain.exponentialRampToValueAtTime(0.001, t+dur);
+            noise.connect(bp); bp.connect(ng); ng.connect(ctx.destination); noise.start(t);
+            const osc = ctx.createOscillator();
+            const f0  = 155 + Math.random() * 65;
+            osc.frequency.setValueAtTime(f0, t);
+            osc.frequency.exponentialRampToValueAtTime(f0 * 0.35, t + 0.07);
+            const og = ctx.createGain();
+            og.gain.setValueAtTime(0.1, t); og.gain.exponentialRampToValueAtTime(0.0001, t+0.09);
+            osc.connect(og); og.connect(ctx.destination);
+            osc.start(t); osc.stop(t + 0.12);
+        }
+
+        // ============================================
+        // CONTROLS
+        // ============================================
+        function enterGame() {
+            controls.lock();
+        }
+
+        function setupControls() {
+            controls = new PointerLockControls(camera, document.body);
+
+            controls.addEventListener('lock', () => {
+                gameState.isPlaying = true;
+                document.getElementById('title-screen').style.display  = 'none';
+                document.getElementById('video-screen').style.display  = 'none';
+                document.getElementById('resume-screen').style.display = 'none';
+                document.getElementById('controls-info').style.display = 'block';
+                document.getElementById('crosshair').style.display     = 'block';
+                document.getElementById('tasks-hud').style.display = 'flex';
+                if (timerStarted) document.getElementById('clock-hud').style.display = 'flex';
+
+                if (flyMode) {
+                    document.getElementById('controls-info').innerHTML =
+                        '<span>W/↑ קדימה</span><span>S/↓ אחורה</span>' +
+                        '<span style="color:#ffd700">Space עלה</span>' +
+                        '<span style="color:#ffd700">Shift ירד</span>' +
+                        '<span style="color:#ff9">F = נעל רצפה כאן</span>' +
+                        '<span>עכבר - מבט</span><span>ESC - יציאה</span>';
+                }
+
+                // Show mission announce only on first entry
+                if (!gameState.hasStarted) {
+                    gameState.hasStarted = true;
+                    startTimer();
+                    const ann = document.getElementById('mission-announce');
+                    ann.style.display = 'block';
+
+                    setTimeout(() => {
+                        ann.style.opacity = '0';
+                        setTimeout(() => {
+                            ann.style.display = 'none';
+                            ann.style.opacity = '';
+                            document.getElementById('mission-popup').style.display = 'block';
+                        }, 520);
+                    }, 10000);
+                }
+            });
+
+            controls.addEventListener('unlock', () => {
+                if (keypadOpen || doorPuzzleOpen || botPuzzleOpen || phonePuzzleOpen || tvPuzzleOpen || computerPuzzleOpen) return;
+                gameState.isPlaying = false;
+                document.getElementById('resume-screen').style.display = 'flex';
+                document.getElementById('controls-info').style.display = 'none';
+                document.getElementById('crosshair').style.display     = 'none';
+                document.getElementById('tasks-hud').style.display = 'none';
+                if (timerStarted) document.getElementById('clock-hud').style.display = 'none';
+                walkSound.pause(); isWalking = false;
+            });
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        function setupEventListeners() {
+            // Phase 1 → Phase 2: play intro video
+            document.getElementById('btn-start').addEventListener('click', () => {
+                document.getElementById('title-screen').style.display = 'none';
+                if (CONFIG.DEV_MODE) {
+                    // DEV: דלג ישירות למשחק — שנה DEV_MODE ל-false להחזרת הסרטון
+                    enterGame();
+                    return;
+                }
+                const videoScreen = document.getElementById('video-screen');
+                videoScreen.style.display = 'flex';
+                const video = document.getElementById('intro-video');
+                video.play().catch(() => {
+                    document.getElementById('btn-enter').style.display = 'block';
+                });
+            });
+
+            // Video ends → show "התחילו" button
+            document.getElementById('intro-video').addEventListener('ended', () => {
+                document.getElementById('btn-enter').style.display = 'block';
+            });
+
+            // Skip button → pause video, show "התחילו"
+            document.getElementById('btn-skip').addEventListener('click', () => {
+                const video = document.getElementById('intro-video');
+                video.pause();
+                document.getElementById('btn-enter').style.display = 'block';
+            });
+
+            // Phase 2 → Game
+            document.getElementById('btn-enter').addEventListener('click', enterGame);
+
+            // Resume screen → Game
+            document.getElementById('btn-resume').addEventListener('click', enterGame);
+
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup',   onKeyUp);
+
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('mousedown', e => {
+                if (e.button === 0 && gameState.isPlaying && !keypadOpen && !doorPuzzleOpen && !botPuzzleOpen && !phonePuzzleOpen && !tvPuzzleOpen && !computerPuzzleOpen) { onZoneEnter(); return; }
+                if (e.button !== 2) return;
+                const p = camera.position, r = camera.rotation;
+                const toDeg = v => (v * 180 / Math.PI).toFixed(2);
+                console.log(`X: ${p.x.toFixed(3)}  Y: ${p.y.toFixed(3)}  Z: ${p.z.toFixed(3)}`);
+                console.log(`rotX: ${toDeg(r.x)}°  rotY: ${toDeg(r.y)}°  rotZ: ${toDeg(r.z)}°`);
+            });
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function onKeyDown(e) {
+            switch (e.code) {
+                case 'KeyW': case 'ArrowUp':    moveState.forward  = true;  break;
+                case 'KeyS': case 'ArrowDown':  moveState.backward = true;  break;
+                case 'KeyA': case 'ArrowLeft':  moveState.left     = true;  break;
+                case 'KeyD': case 'ArrowRight': moveState.right    = true;  break;
+                case 'Enter':                   onZoneEnter(); break;
+                case 'Space':                   moveState.up       = true;  e.preventDefault(); break;
+                case 'ShiftLeft': case 'ShiftRight': moveState.down = true; break;
+                case 'KeyF': {
+                    if (flyMode) {
+                        floorY   = camera.position.y - CONFIG.PLAYER_HEIGHT;
+                        flyMode  = false;
+                        document.getElementById('controls-info').innerHTML =
+                            '<span>W/↑ קדימה</span><span>S/↓ אחורה</span><span>A/← שמאלה</span>' +
+                            '<span>D/→ ימינה</span><span>עכבר - הסתכלות</span><span>ESC - יציאה</span>';
+                        console.log(`✅ Floor locked at Y=${floorY.toFixed(3)}`);
+                    }
+                    break;
+                }
+                case 'Backquote': {
+                    const dbg = document.getElementById('position-debug');
+                    dbg.style.display = dbg.style.display === 'none' ? 'block' : 'none';
+                    break;
+                }
+            }
+        }
+        function onKeyUp(e) {
+            switch (e.code) {
+                case 'KeyW': case 'ArrowUp':    moveState.forward  = false; break;
+                case 'KeyS': case 'ArrowDown':  moveState.backward = false; break;
+                case 'KeyA': case 'ArrowLeft':  moveState.left     = false; break;
+                case 'KeyD': case 'ArrowRight': moveState.right    = false; break;
+                case 'Space':                   moveState.up       = false; break;
+                case 'ShiftLeft': case 'ShiftRight': moveState.down = false; break;
+            }
+        }
+        function onWindowResize() {
+            const w = window.innerWidth, h = window.innerHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        }
+
+        // ============================================
+        // MOBILE CONTROLS
+        // ============================================
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        function setupMobileControls() {
+            const map = { 'btn-forward':'forward', 'btn-backward':'backward', 'btn-left':'left', 'btn-right':'right' };
+            Object.entries(map).forEach(([id, dir]) => {
+                const btn = document.getElementById(id);
+                btn.addEventListener('touchstart', e => { e.preventDefault(); moveState[dir] = true; });
+                btn.addEventListener('touchend',   e => { e.preventDefault(); moveState[dir] = false; });
+                btn.addEventListener('mousedown', () => moveState[dir] = true);
+                btn.addEventListener('mouseup',   () => moveState[dir] = false);
+                btn.addEventListener('mouseleave',() => moveState[dir] = false);
+            });
+            let tx = 0, ty = 0;
+            renderer.domElement.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }
+            });
+            renderer.domElement.addEventListener('touchmove', e => {
+                if (e.touches.length === 1 && gameState.isPlaying) {
+                    camera.rotation.y -= (e.touches[0].clientX - tx) * 0.005;
+                    camera.rotation.x -= (e.touches[0].clientY - ty) * 0.005;
+                    camera.rotation.x  = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+                    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+                }
+            });
+        }
+
+        // ============================================
+        // COLLISION
+        // Areas where GLB collision is disabled to allow passage
+        const DEAD_ZONES = [
+            { xMin: -1.05, xMax: 1.80, zMin: -5.57, zMax: -4.00 }
+        ];
+
+        function checkCollision(dir) {
+            if (!roomMeshes.length) return false;
+            const p = camera.position;
+            for (const dz of DEAD_ZONES) {
+                if (p.x >= dz.xMin && p.x <= dz.xMax && p.z >= dz.zMin && p.z <= dz.zMax) return false;
+            }
+            const origin = p.clone();
+            origin.y -= 0.5;
+            _ray.set(origin, dir);
+            return _ray.intersectObjects(roomMeshes, false).length > 0;
+        }
+
+        // ============================================
+        // LOAD room.spz
+        // ============================================
+        function placeBillboard(url, x, y, z, scale = 0.4, rx = 0, ry = 0, rz = 0) {
+            const tex = new THREE.TextureLoader().load(url, (t) => {
+                const aspect = t.image.width / t.image.height;
+                mesh.scale.set(scale * aspect, scale, 1);
+            });
+            tex.colorSpace = THREE.SRGBColorSpace;
+            const mat = new THREE.MeshBasicMaterial({
+                map: tex, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide
+            });
+            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+            mesh.position.set(x, y, z);
+            mesh.scale.set(scale, scale, 1);
+            mesh.rotation.set(rx, ry, rz);
+            mesh.renderOrder = 999;
+            scene.add(mesh);
+            return mesh;
+        }
+
+        async function loadRoomModel() {
+            try {
+                const loader = new SplatLoader();
+
+                const packedSplats = await loader.loadAsync('models/room.spz', (event) => {
+                    if (event.type === 'progress' && event.lengthComputable) {
+                        const pct = ((event.loaded / event.total) * 100).toFixed(0);
+                        document.getElementById('loading-text').textContent = `${pct}%`;
+                    }
+                });
+
+                const splatMesh = new SplatMesh({ packedSplats });
+                splatMesh.position.set(0, 0, 0);
+                splatMesh.rotation.set(0, 0, 0);
+                splatMesh.scale.set(1, 1, 1);
+                scene.add(splatMesh);
+
+                loadGLBForCollision();
+
+                flyMode = false;
+                floorY  = -1.2;
+                const deg = Math.PI / 180;
+                camera.position.set(1.729, floorY + CONFIG.PLAYER_HEIGHT, -5.218);
+                camera.rotation.set(172.84 * deg, 19.07 * deg, -177.65 * deg);
+                _prevPos.copy(camera.position);
+
+                scene.background = new THREE.Color(0x000000);
+                scene.fog        = null;
+
+                onModelLoaded();
+                placeBillboard('images/fix.png', 2.866, 1.1, -3.593, 0.4, -0.35, -Math.PI / 2, 0);
+                (function() {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width  = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const d  = id.data;
+                        for (let i = 0; i < d.length; i += 4) {
+                            if (d[i] > 230 && d[i+1] > 230 && d[i+2] > 230) d[i+3] = 0;
+                        }
+                        ctx.putImageData(id, 0, 0);
+                        const tex = new THREE.CanvasTexture(canvas);
+                        tex.colorSpace = THREE.SRGBColorSpace;
+                        const aspect = img.width / img.height;
+                        const mat  = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+                        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+                        mesh.position.set(-2.511, 1.45, -1.20);
+                        mesh.scale.set(2.5 * aspect, 2.5, 1);
+                        mesh.rotation.set(0, Math.PI / 2, 0);
+                        mesh.renderOrder = 999;
+                        scene.add(mesh);
+                    };
+                    img.src = 'images/tv2.png';
+                })();
+
+            } catch (err) {
+                console.error('SPZ load error — falling back to GLB:', err);
+                loadGLBFallback();
+            }
+        }
+
+        function loadGLBForCollision() {
+            const draco = new DRACOLoader();
+            draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
+            const loader = new GLTFLoader();
+            loader.setDRACOLoader(draco);
+            loader.load('models/room.glb', gltf => {
+                // Merge all meshes into one for fast single-raycast collision
+                gltf.scene.updateMatrixWorld(true);
+                const geometries = [];
+                gltf.scene.traverse(node => {
+                    if (!node.isMesh) return;
+                    const g = node.geometry.clone();
+                    g.applyMatrix4(node.matrixWorld);
+                    geometries.push(g);
+                });
+                if (geometries.length === 0) return;
+                const merged = mergeGeometries(geometries, false);
+                geometries.forEach(g => g.dispose());
+                const collisionMesh = new THREE.Mesh(merged, new THREE.MeshBasicMaterial({ visible: false }));
+                scene.add(collisionMesh);
+                roomMeshes.push(collisionMesh);
+                console.log(`Collision: merged ${geometries.length} meshes → 1`);
+            }, null, () => console.warn('GLB collision mesh not found — walls disabled'));
+        }
+
+        function loadGLBFallback() {
+            const draco = new DRACOLoader();
+            draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
+            const loader = new GLTFLoader();
+            loader.setDRACOLoader(draco);
+            loader.load(
+                'models/room.glb',
+                gltf => {
+                    const model = gltf.scene;
+                    model.traverse(node => {
+                        if (!node.isMesh) return;
+                        node.castShadow = node.receiveShadow = true;
+                        roomMeshes.push(node);
+                        const mats = Array.isArray(node.material) ? node.material : [node.material];
+                        mats.forEach(mat => {
+                            if (!mat) return;
+                            if ('envMapIntensity' in mat) mat.envMapIntensity = 2.5;
+                        });
+                    });
+                    scene.add(model);
+
+                    const box    = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size   = box.getSize(new THREE.Vector3());
+
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim > 0 && (maxDim > 80 || maxDim < 2)) {
+                        model.scale.setScalar(20 / maxDim);
+                        box.setFromObject(model); box.getCenter(center); box.getSize(size);
+                    }
+
+                    floorY = box.min.y;
+                    const fr = new THREE.Raycaster(
+                        new THREE.Vector3(center.x, box.max.y + 0.5, center.z),
+                        new THREE.Vector3(0, -1, 0), 0, size.y + 1
+                    );
+                    const fh = fr.intersectObjects(roomMeshes, false);
+                    if (fh.length) { fh.sort((a,b) => a.point.y - b.point.y); floorY = fh[0].point.y; }
+
+                    camera.position.set(center.x, floorY + CONFIG.PLAYER_HEIGHT, center.z);
+                    camera.rotation.set(0, 0, 0);
+                    _prevPos.copy(camera.position);
+
+                    const cl = window._ceilLight;
+                    cl.position.set(center.x, box.max.y + size.y * 0.5, center.z);
+                    cl.target.position.copy(center);
+                    scene.add(cl.target);
+                    const hw = Math.max(size.x, size.z) * 0.8;
+                    Object.assign(cl.shadow.camera, { left:-hw, right:hw, top:hw, bottom:-hw, far: size.y*4+2 });
+                    cl.shadow.camera.updateProjectionMatrix();
+
+                    const ptH = floorY + size.y * 0.72;
+                    const corners = [
+                        [center.x+size.x*.28, ptH, center.z+size.z*.28],
+                        [center.x-size.x*.28, ptH, center.z+size.z*.28],
+                        [center.x+size.x*.28, ptH, center.z-size.z*.28],
+                        [center.x-size.x*.28, ptH, center.z-size.z*.28],
+                    ];
+                    window._ptLights.forEach((pl,i) => {
+                        pl.position.set(...corners[i]);
+                        pl.distance = Math.max(size.x, size.z) * 1.5;
+                    });
+                    onModelLoaded();
+                },
+                null,
+                err => {
+                    console.error('GLB fallback failed:', err);
+                    document.getElementById('loading-text').textContent = '⚠ שגיאה בטעינה';
+                }
+            );
+        }
+
+        function onModelLoaded() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('title-screen').style.display   = 'flex';
+            gameState.isLoaded = true;
+
+            if (isMobile()) {
+                document.getElementById('title-screen').style.display   = 'none';
+                document.getElementById('controls-info').style.display  = 'block';
+                document.getElementById('mission-popup').style.display  = 'block';
+                gameState.isPlaying = true;
+            }
+        }
+
+        // ============================================
+        // UPDATE MOVEMENT
+        // ============================================
+        function updateMovement(delta) {
+            if (!gameState.isPlaying) return;
+
+            direction.z = Number(moveState.forward)  - Number(moveState.backward);
+            direction.x = Number(moveState.right)    - Number(moveState.left);
+            direction.normalize();
+
+            const spd = CONFIG.PLAYER_SPEED * delta;
+
+            camera.getWorldDirection(_fwd); _fwd.y = 0; _fwd.normalize();
+            _rgt.setFromMatrixColumn(camera.matrixWorld, 0); _rgt.y = 0; _rgt.normalize();
+
+            if (moveState.forward || moveState.backward) {
+                const moveFwd  = direction.z * spd;
+                const checkDir = direction.z > 0 ? _fwd : _neg.copy(_fwd).negate();
+                if (!checkCollision(checkDir)) controls.moveForward(moveFwd);
+            }
+            if (moveState.left || moveState.right) {
+                const moveRgt  = direction.x * spd;
+                const checkDir = direction.x > 0 ? _rgt : _neg.copy(_rgt).negate();
+                if (!checkCollision(checkDir)) controls.moveRight(moveRgt);
+            }
+
+            const isMoving = moveState.forward || moveState.backward || moveState.left || moveState.right;
+
+            if (flyMode) {
+                if (moveState.up)   camera.position.y += spd * 1.5;
+                if (moveState.down) camera.position.y -= spd * 1.5;
+            } else {
+                if (isMoving) {
+                    bobTime          += delta * CONFIG.BOB_FREQUENCY;
+                    currentBobAmount  = Math.min(currentBobAmount + delta * 3, 1);
+                } else {
+                    currentBobAmount  = Math.max(currentBobAmount - delta * 3, 0);
+                }
+                const vertBob = Math.sin(bobTime * 2) * CONFIG.BOB_VERTICAL_AMOUNT * currentBobAmount;
+                camera.position.y = floorY + CONFIG.PLAYER_HEIGHT + vertBob;
+            }
+
+            updateWalkSound(isMoving);
+            if (isMoving && !walkSoundOk) {
+                stepAccum += camera.position.distanceTo(_prevPos);
+                if (stepAccum >= STEP_DIST) { playProceduralStep(); stepAccum -= STEP_DIST; }
+            }
+            _prevPos.copy(camera.position);
+
+            const flicker = Math.sin(clock.getElapsedTime() * 7.3) * 0.06
+                          + Math.cos(clock.getElapsedTime() * 13.1) * 0.04;
+            window._ptLights.forEach((pl, i) => { pl.intensity = 3.5 + flicker * (i % 2 ? 1 : -1); });
+
+            if (document.getElementById('position-debug').style.display !== 'none') {
+                const p = camera.position, r = camera.rotation, deg = 180 / Math.PI;
+                document.getElementById('pos-x').textContent = p.x.toFixed(2);
+                document.getElementById('pos-y').textContent = p.y.toFixed(2);
+                document.getElementById('pos-z').textContent = p.z.toFixed(2);
+                document.getElementById('rot-x').textContent = (r.x * deg).toFixed(2);
+                document.getElementById('rot-y').textContent = (r.y * deg).toFixed(2);
+                document.getElementById('rot-z').textContent = (r.z * deg).toFixed(2);
+            }
+        }
+
+        // ============================================
+        // ZONE PROXIMITY
+        // ============================================
+        function updateZoneProximity() {
+            if (!gameState.isPlaying) return;
+            const px = camera.position.x, pz = camera.position.z;
+            let nearest = null, nearestDist = Infinity;
+            for (const zone of Object.values(ZONES)) {
+                const dx = px - zone.x, dz = pz - zone.z;
+                const dist = Math.sqrt(dx*dx + dz*dz);
+                if (dist < (zone.radius || ZONE_RADIUS) && dist < nearestDist) {
+                    nearest = zone; nearestDist = dist;
+                }
+            }
+            const popup = document.getElementById('zone-popup');
+            if (nearest !== activeZone) {
+                activeZone = nearest;
+                const hint = document.getElementById('zone-popup-hint');
+                hint.style.color = '';
+                if (nearest) {
+                    const isDoorLocked = nearest.key === 'DOOR' && !hasKey;
+                    document.getElementById('zone-popup-name').textContent =
+                        isDoorLocked ? '🔒 ' + nearest.label : nearest.label;
+                    hint.textContent = isDoorLocked
+                        ? 'הדלת נעולה — מצאו את המפתח'
+                        : 'לחצו קליק שמאלי או Enter להיכנס';
+                    hint.style.color = isDoorLocked ? '#ff6666' : '';
+                    popup.style.display = 'block';
+                } else {
+                    popup.style.display = 'none';
+                }
+            }
+        }
+
+        function onZoneEnter() {
+            if (!activeZone) return;
+            const key = activeZone.key;
+
+            if (key === 'KEY') {
+                if (tasksDone.KEY) return;
+                if (keyIntroVideoPlayed) { openKeypad(); return; }
+                keyIntroVideoPlayed = true;
+                keypadOpen = true;
+                controls.unlock();
+                const overlay = document.getElementById('key-video-overlay');
+                const vid     = document.getElementById('key-video');
+                overlay.style.display = 'flex';
+                vid.currentTime = 0;
+                vid.play().catch(() => {});
+                vid.onended = () => {
+                    const hint = document.createElement('div');
+                    hint.textContent = 'לחצו להמשיך';
+                    hint.style.cssText = 'position:absolute;bottom:50px;color:#fff;font-size:22px;letter-spacing:2px;text-shadow:0 0 12px rgba(255,255,255,0.8);pointer-events:none;';
+                    overlay.appendChild(hint);
+                    overlay.style.cursor = 'pointer';
+                    overlay.onclick = () => {
+                        overlay.style.display = 'none';
+                        overlay.onclick = null;
+                        overlay.removeChild(hint);
+                        openKeypad();
+                    };
+                };
+                return;
+            }
+
+            if (key === 'DOOR') {
+                if (!hasKey) {
+                    const hint = document.getElementById('zone-popup-hint');
+                    hint.textContent = '🔒 הדלת נעולה — מצאו את המפתח';
+                    hint.style.color = '#ff4444';
+                    setTimeout(() => {
+                        hint.textContent = 'לחצו קליק שמאלי או Enter להיכנס';
+                        hint.style.color = '';
+                    }, 2000);
+                    return;
+                }
+                if (tasksDone.DOOR) return;
+                window._playDoorVideo();
+                return;
+            }
+
+            if (key === 'ROBOT') {
+                if (tasksDone.ROBOT) return;
+                window._playBotVideo();
+                return;
+            }
+
+            if (key === 'PHONE') {
+                if (tasksDone.PHONE) return;
+                openPhonePuzzle();
+                return;
+            }
+
+            if (key === 'TV') {
+                if (tasksDone.TV) return;
+                openTvPuzzle();
+                return;
+            }
+
+            if (key === 'COMPUTER') {
+                if (tasksDone.COMPUTER) return;
+                openComputerPuzzle();
+                return;
+            }
+
+            console.log(`נכנסתם ל: ${activeZone.label}`);
+        }
+
+        // ============================================
+        // CONFETTI
+        // ============================================
+        function launchConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            const colors = ['#ffd700','#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffeaa7','#dda0dd','#00ff88','#ff8c42','#fff'];
+            const particles = Array.from({ length: 180 }, () => ({
+                x:     Math.random() * canvas.width,
+                y:     Math.random() * -canvas.height * 0.5,
+                w:     Math.random() * 11 + 5,
+                h:     Math.random() * 7 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 3.5 + 1.5,
+                angle: Math.random() * Math.PI * 2,
+                spin:  (Math.random() - 0.5) * 0.22,
+                drift: (Math.random() - 0.5) * 1.8,
+            }));
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+                particles.forEach(p => {
+                    p.y += p.speed; p.x += p.drift; p.angle += p.spin;
+                    if (p.y < canvas.height + 20) alive = true;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.angle);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    ctx.restore();
+                });
+                if (alive) requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // ============================================
+        // ANIMATE
+        // ============================================
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = Math.min(clock.getDelta(), 0.05);
+            updateMovement(delta);
+            updateZoneProximity();
+            if (_heldKey) {
+                const t = performance.now() * 0.003;
+                _heldKey.position.x = 0.28 + Math.sin(t * 2.1) * (isWalking ? 0.012 : 0.003);
+                _heldKey.position.y = -0.20 + Math.sin(t)       * (isWalking ? 0.010 : 0.002);
+            }
+            renderer.render(scene, camera);
+        }
+
+        // ============================================
+        // START
+        // ============================================
+        init();
+    </script>
+</body>
+</html>
