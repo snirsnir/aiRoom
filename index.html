@@ -521,6 +521,95 @@
         #victory-restart:hover  { transform: scale(1.06); box-shadow: 0 6px 32px rgba(0,120,255,0.65); }
         #victory-restart:active { transform: scale(0.97); }
 
+        /* ── Quiz Popup ── */
+        #quiz-popup {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.94);
+            z-index: 810; overflow-y: auto;
+            direction: rtl; padding: 30px 20px;
+            box-sizing: border-box;
+        }
+        #quiz-inner {
+            width: min(680px, 96vw);
+            margin: 0 auto;
+            color: #fff;
+            font-family: 'Varela Round', Arial, sans-serif;
+        }
+        #quiz-title {
+            font-size: 28px; color: #00d4ff; text-align: center;
+            text-shadow: 0 0 18px rgba(0,212,255,0.7);
+            margin-bottom: 6px; letter-spacing: 1px;
+        }
+        #quiz-subtitle {
+            font-size: 15px; color: rgba(0,212,255,0.55);
+            text-align: center; margin-bottom: 26px; letter-spacing: 0.5px;
+        }
+        .quiz-question-block {
+            background: rgba(0,20,50,0.7);
+            border: 1px solid rgba(0,180,255,0.22);
+            border-radius: 12px; padding: 18px 22px;
+            margin-bottom: 18px;
+        }
+        .quiz-q-text {
+            font-size: 16px; line-height: 1.65; color: #e8f4ff;
+            margin-bottom: 14px; font-weight: bold;
+        }
+        .quiz-q-num {
+            color: #00d4ff; margin-left: 6px; font-weight: bold;
+        }
+        .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+        .quiz-option {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 14px; border-radius: 8px;
+            cursor: pointer; border: 1px solid rgba(0,180,255,0.18);
+            background: rgba(0,10,30,0.5);
+            transition: background 0.15s, border-color 0.15s;
+            font-size: 15px; line-height: 1.45;
+        }
+        .quiz-option:hover { background: rgba(0,80,160,0.35); border-color: rgba(0,180,255,0.4); }
+        .quiz-option input[type=radio] { width: 16px; height: 16px; flex-shrink: 0; accent-color: #00d4ff; cursor: pointer; }
+        .quiz-option.correct-ans  { background: rgba(0,200,80,0.22); border-color: #00cc66; color: #7fffb0; }
+        .quiz-option.wrong-ans    { background: rgba(200,30,30,0.22); border-color: #cc3333; color: #ffaaaa; }
+        #quiz-submit-btn {
+            display: block; width: 100%; margin-top: 10px;
+            padding: 16px; border-radius: 10px;
+            background: linear-gradient(135deg, #0055cc, #0088ff);
+            border: none; color: #fff; font-size: 18px; font-weight: 600;
+            cursor: pointer; font-family: 'Varela Round', Arial, sans-serif;
+            letter-spacing: 0.5px; transition: transform 0.12s;
+        }
+        #quiz-submit-btn:hover  { transform: scale(1.03); }
+        #quiz-submit-btn:active { transform: scale(0.98); }
+        #quiz-score-screen {
+            display: none; flex-direction: column; align-items: center;
+            text-align: center; gap: 20px; padding: 20px 0;
+        }
+        #quiz-score-num {
+            font-size: 80px; font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,165,0,0.4);
+            line-height: 1;
+        }
+        #quiz-score-label {
+            font-size: 22px; color: rgba(255,255,255,0.75); margin-top: -8px;
+        }
+        #quiz-score-msg {
+            font-size: 18px; line-height: 1.65; color: #c8e8ff;
+            max-width: 520px; background: rgba(0,30,70,0.6);
+            border: 1px solid rgba(0,180,255,0.25);
+            border-radius: 12px; padding: 18px 24px;
+        }
+        #quiz-continue-btn {
+            padding: 15px 50px; border-radius: 10px;
+            background: linear-gradient(135deg, #006600, #00aa44);
+            border: none; color: #fff; font-size: 18px; font-weight: 600;
+            cursor: pointer; font-family: 'Varela Round', Arial, sans-serif;
+            letter-spacing: 0.5px; transition: transform 0.12s;
+            margin-top: 8px;
+        }
+        #quiz-continue-btn:hover  { transform: scale(1.05); }
+        #quiz-continue-btn:active { transform: scale(0.97); }
+
         /* ── Door Puzzle Popup ── */
         #door-popup {
             position: absolute; inset: 0;
@@ -1129,11 +1218,15 @@
             display: none; justify-content: center; align-items: center;
             background: rgba(0,0,0,0.93); z-index: 500;
         }
-        /* Screen 0: bad graph intro */
+        .comp-prompt { color: #569cd6; font-weight: bold; }
+        .t-kw  { color: #569cd6; }
+        .t-var { color: #9cdcfe; }
+        .t-num { color: #b5cea8; }
+        .t-fn  { color: #dcdcaa; }
+        /* Screen 0: alert / bad graph intro */
         #computer-screen-intro {
             display: none; flex-direction: column; align-items: center;
-            width: 100%; height: 100%;
-            padding: 28px 20px; box-sizing: border-box;
+            width: 100%; height: 100%; padding: 28px 20px; box-sizing: border-box;
             gap: 16px; overflow-y: auto; justify-content: center;
         }
         #computer-bad-img {
@@ -1154,12 +1247,6 @@
         .comp-tw-line { display: block; font-size: 14px; color: rgba(255,255,255,0.88); margin: 3px 0; }
         .comp-tw-line.title-line { color: #ff5050; font-size: 17px; font-weight: bold; margin-bottom: 10px; }
         .comp-tw-line.damage-line { color: #ff6666; font-weight: bold; }
-        .comp-tw-cursor {
-            display: inline-block; width: 2px; height: 0.9em;
-            background: #ff5050; margin-right: 2px;
-            vertical-align: middle;
-            animation: tw-blink 0.7s step-end infinite;
-        }
         #computer-intro-next-btn {
             padding: 11px 34px; border-radius: 7px;
             background: #7a0000; border: 1px solid #ff4444;
@@ -1167,113 +1254,138 @@
             font-family: 'Segoe UI', sans-serif;
         }
         #computer-intro-next-btn:hover { background: #bb0000; }
-        /* Screen 1: terminal puzzle */
-        #computer-screen-puzzle {
-            display: none; flex-direction: column; align-items: center;
-            width: 100%; height: 100%; padding: 18px 20px; box-sizing: border-box;
-            position: relative; justify-content: center; gap: 10px; overflow-y: auto;
+
+        /* Screen 1: code display */
+        #computer-screen-code {
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100%; padding: 30px 20px; box-sizing: border-box; gap: 22px;
         }
-        #computer-close-btn {
-            position: absolute; top: 14px; left: 18px;
-            background: transparent; border: none;
-            color: rgba(255,255,255,0.42); font-size: 22px; cursor: pointer; z-index: 10;
+        #comp-debug-header {
+            font-family: 'Consolas', monospace; font-size: 15px;
+            color: #4ec9b0; line-height: 2.1;
+            text-align: left; direction: ltr;
+            width: min(680px, 94vw);
         }
-        #computer-close-btn:hover { color: #fff; }
-        #computer-title-bar {
-            text-align: center; color: #00d4ff;
-            font-family: 'Segoe UI', sans-serif; direction: rtl;
-        }
-        #computer-title-bar h2 { font-size: 20px; margin: 0; font-weight: 700; }
-        #computer-explain {
-            width: min(790px, 96vw);
-            background: rgba(0,212,255,0.06);
-            border: 1px solid rgba(0,212,255,0.2);
-            border-radius: 8px; padding: 10px 18px;
-            direction: rtl; text-align: right;
-            color: rgba(255,255,255,0.8);
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 13.5px; line-height: 1.6;
-        }
-        #computer-explain strong { color: #00d4ff; }
-        #computer-explain p { margin: 3px 0; }
-        /* Terminal window */
-        #terminal-window {
-            width: min(790px, 96vw);
+        #comp-code-block {
+            width: min(680px, 94vw);
             background: #1e1e1e; border-radius: 10px;
-            box-shadow: 0 0 50px rgba(0,100,255,0.28), 0 0 0 1px rgba(255,255,255,0.07);
-            overflow: hidden;
-            font-family: 'Consolas', 'Courier New', monospace; font-size: 14.5px;
+            padding: 22px 30px;
+            box-shadow: 0 0 40px rgba(0,100,255,0.25), 0 0 0 1px rgba(255,255,255,0.07);
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 15px; line-height: 1.9;
+            direction: rtl; text-align: right;
         }
-        #terminal-titlebar {
-            background: #323233;
-            display: flex; align-items: center; gap: 7px; padding: 9px 14px;
+        .cc-line { display: block; color: #d4d4d4; }
+        .cc-indent { padding-right: 28px; }
+        #comp-code-next-btn {
+            padding: 12px 44px; border-radius: 8px;
+            background: #1a4a1a; border: 1px solid #44ff88;
+            color: #44ff88; font-size: 15px; cursor: pointer;
+            font-family: 'Segoe UI', sans-serif; transition: background 0.2s;
         }
-        .term-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .term-dot.red    { background: #ff5f57; }
-        .term-dot.yellow { background: #ffbd2e; }
-        .term-dot.green  { background: #28c840; }
-        #terminal-filename {
-            flex: 1; text-align: center;
-            color: rgba(255,255,255,0.5); font-size: 12px;
+        #comp-code-next-btn:hover { background: #226622; }
+
+        /* Screens 2+3: two-column layout with code sidebar */
+        .comp-with-code {
+            display: flex; width: 100%; height: 100%;
+            align-items: center; justify-content: center;
+            gap: 44px; padding: 30px 40px; box-sizing: border-box;
+        }
+        .comp-code-sidebar {
+            flex: 0 0 auto; width: min(320px, 36vw);
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .comp-sidebar-lbl {
+            font-family: 'Consolas', monospace; font-size: 12px;
+            color: #4ec9b0; direction: ltr;
+        }
+        .comp-code-mini {
+            background: #1e1e1e; border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 0 20px rgba(0,100,255,0.2), 0 0 0 1px rgba(255,255,255,0.06);
+            font-family: 'Consolas','Courier New',monospace;
+            font-size: 13px; line-height: 1.8; direction: rtl; text-align: right;
+        }
+        .comp-main-panel {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 26px; max-width: 420px;
+        }
+        #computer-screen-qa {
+            display: none; width: 100%; height: 100%;
+        }
+        #comp-qa-header {
+            font-family: 'Consolas', monospace; font-size: 15px;
+            color: #4ec9b0; direction: ltr; align-self: flex-start;
+        }
+        .comp-question {
+            display: flex; flex-direction: column; align-items: center; gap: 18px;
+            width: 100%;
+        }
+        .comp-question p {
+            font-family: 'Segoe UI', sans-serif; font-size: 20px;
+            color: #fff; text-align: center; direction: rtl; margin: 0;
+        }
+        .comp-btn-row { display: flex; gap: 22px; }
+        .comp-ans-btn {
+            padding: 12px 44px; border-radius: 8px;
+            font-size: 17px; cursor: pointer;
             font-family: 'Segoe UI', sans-serif;
+            border: 2px solid rgba(255,255,255,0.25);
+            background: #2a2a2a; color: #fff; transition: all 0.18s;
         }
-        #terminal-body {
-            padding: 14px 22px; line-height: 1.75;
-            overflow-x: auto; overflow-y: auto; max-height: 300px;
+        .comp-ans-btn:hover { background: #3a3a3a; border-color: #fff; }
+        .comp-err-msg {
+            font-family: 'Segoe UI', sans-serif; font-size: 14px;
+            color: #ff5555; direction: rtl; text-align: center; min-height: 22px;
         }
-        .term-line { white-space: pre; color: #d4d4d4; display: block; }
-        .t-kw  { color: #c586c0; }
-        .t-var { color: #9cdcfe; }
-        .t-str { color: #ce9178; }
-        .t-num { color: #b5cea8; }
-        .t-cmt { color: #6a9955; font-style: italic; }
-        .t-op  { color: #d4d4d4; }
-        .t-fn  { color: #dcdcaa; }
-        .t-sys { color: #4ec9b0; }
-        .t-prompt { color: #569cd6; font-weight: bold; }
-        #terminal-input-row {
-            display: flex; align-items: center; gap: 14px;
-            padding: 13px 20px;
-            background: #252526;
-            border-top: 1px solid rgba(255,255,255,0.07);
-            direction: rtl;
+        /* Screen 3: Debug */
+        #computer-screen-debug { display: none; width: 100%; height: 100%; }
+        #comp-debug-title {
+            font-family: 'Consolas', monospace; font-size: 14px;
+            color: #4ec9b0; direction: ltr; line-height: 2; align-self: flex-start;
         }
-        #terminal-input-label {
-            color: rgba(255,255,255,0.65); font-family: 'Segoe UI', sans-serif;
-            font-size: 13px; white-space: nowrap; flex: 1;
+        .comp-debug-sub {
+            font-family: 'Segoe UI', sans-serif; font-size: 14px;
+            color: rgba(255,255,255,0.65); display: block; margin-top: 4px;
+            direction: rtl; text-align: right;
         }
-        .digit-input-wrap { display: flex; gap: 12px; direction: ltr; }
-        .digit-box {
-            width: 54px; height: 58px;
-            background: #3c3c3c; border: 2px solid #555;
-            border-radius: 8px; color: #b5cea8;
-            font-size: 30px; text-align: center;
-            font-family: 'Consolas', monospace; outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            caret-color: #569cd6;
+        #comp-debug-form {
+            display: flex; flex-direction: column; gap: 16px; width: 100%; align-items: center;
         }
-        .digit-box:focus { border-color: #569cd6; box-shadow: 0 0 0 3px rgba(86,156,214,0.22); }
-        .digit-box.error   { border-color: #ff4444 !important; animation: digit-shake 0.35s ease; }
-        .digit-box.correct { border-color: #44ff88 !important; color: #44ff88; }
-        @keyframes digit-shake {
-            0%,100% { transform: translateX(0); }
-            25%     { transform: translateX(-5px); }
-            75%     { transform: translateX(5px); }
+        .comp-debug-row {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+            font-family: 'Segoe UI', sans-serif; font-size: 15px;
+            color: rgba(255,255,255,0.85); direction: rtl;
         }
-        #computer-result-msg {
-            padding: 8px 20px; text-align: center;
-            font-family: 'Segoe UI', sans-serif; font-size: 13px;
-            min-height: 32px; direction: rtl; background: #1e1e1e;
-            border-top: 1px solid rgba(255,255,255,0.05); color: #ff5555;
+        .comp-debug-row code {
+            font-family: 'Consolas', monospace; font-size: 13px;
+            color: #dcdcaa; background: #2a2a2a;
+            padding: 2px 7px; border-radius: 4px; direction: ltr; display: inline-block;
         }
-        /* Screen 2: good graph success */
+        .comp-fill {
+            width: 110px; padding: 7px 10px;
+            background: #2a2a2a; border: 2px solid #555;
+            border-radius: 7px; color: #9cdcfe;
+            font-size: 15px; font-family: 'Consolas', monospace;
+            text-align: center; outline: none; direction: rtl;
+            transition: border-color 0.2s;
+        }
+        .comp-fill:focus { border-color: #569cd6; box-shadow: 0 0 0 3px rgba(86,156,214,0.22); }
+        #comp-debug-submit {
+            padding: 11px 44px; border-radius: 8px;
+            background: #00335a; border: 1px solid #569cd6;
+            color: #9cdcfe; font-size: 15px; cursor: pointer;
+            font-family: 'Segoe UI', sans-serif; transition: background 0.2s;
+        }
+        #comp-debug-submit:hover { background: #004a80; }
+
+        /* Screen 4: good graph success */
         #computer-screen-success {
             display: none; width: 100%; height: 100%;
             position: relative; background: #000; align-items: center; justify-content: center;
         }
-        #computer-good-video {
-            width: 100%; height: 100%; object-fit: cover;
-        }
+        #computer-good-video { width: 100%; height: 100%; object-fit: cover; }
         #computer-success-overlay {
             position: absolute; bottom: 70px; width: 100%;
             text-align: center; direction: rtl;
@@ -1487,7 +1599,7 @@
     <!-- Tasks HUD -->
     <div id="tasks-hud">
         <div class="task-circle" id="task-TV" data-code="16"     title="מתחם הטלויזיה"><img src="images/tv.png"    alt="tv"></div>
-        <div class="task-circle" id="task-PHONE" data-code="32"  title="מתחם הטלפון">  <img src="images/phone.png" alt="phone"></div>
+        <div class="task-circle" id="task-PHONE" data-code="84"  title="מתחם הטלפון">  <img src="images/phone.png" alt="phone"></div>
         <div class="task-circle" id="task-COMPUTER" data-code="76" title="מתחם המחשב"><img src="images/pc.png"    alt="pc"></div>
         <div class="task-circle" id="task-ROBOT" data-code="50"  title="מתחם הרובוט">  <img src="images/bot.png"   alt="bot"></div>
         <div class="task-circle" id="task-DOOR"    title="מתחם הדלת">    <img src="images/door.png"  alt="door"></div>
@@ -1548,6 +1660,24 @@
             <div id="victory-subtitle">סיימתם את הפעילות בהצלחה!</div>
             <div id="victory-time">⏱ נשאר לכם עוד <span id="victory-remaining"></span> — אתם אלופים!</div>
             <button id="victory-restart">🔄 התחילו מחדש</button>
+        </div>
+    </div>
+
+    <!-- Quiz Popup -->
+    <div id="quiz-popup">
+        <div id="quiz-inner">
+            <div id="quiz-questions-screen">
+                <div id="quiz-title">🧠 שאלון סיכום</div>
+                <div id="quiz-subtitle">הבוטים הסוררים והבינה המלאכותית</div>
+                <div id="quiz-questions-list"></div>
+                <button id="quiz-submit-btn" onclick="submitQuiz()">סיימו ובדקו תשובות ✓</button>
+            </div>
+            <div id="quiz-score-screen">
+                <div id="quiz-score-num"></div>
+                <div id="quiz-score-label">ציון</div>
+                <div id="quiz-score-msg"></div>
+                <button id="quiz-continue-btn" onclick="showVictory()">המשך לסיום 🏆</button>
+            </div>
         </div>
     </div>
 
@@ -1665,7 +1795,7 @@
     <!-- Computer Puzzle Popup -->
     <div id="computer-popup">
 
-        <!-- Screen 0: Bad graph intro -->
+        <!-- Screen 0: Alert — bad graph -->
         <div id="computer-screen-intro">
             <img id="computer-bad-img" src="images/badgraph.png" alt="גרפים אדומים">
             <div id="computer-typewriter-wrap">
@@ -1674,65 +1804,119 @@
             <button id="computer-intro-next-btn" style="display:none">פתחו את הקוד ◄</button>
         </div>
 
-        <!-- Screen 1: Terminal puzzle -->
-        <div id="computer-screen-puzzle">
-            <button id="computer-close-btn">✕</button>
-            <div id="computer-title-bar">
-                <h2>⚡ קוד הסיווג של נובה — ALGO TRADE</h2>
+        <!-- Screen 1: Code display -->
+        <div id="computer-screen-code">
+            <div id="comp-debug-header">
+                <span class="comp-prompt">&gt;</span> SYSTEM_DEBUG_MODE_INITIATED...<br>
+                <span class="comp-prompt">&gt;</span> סורק פקודות מסחר:
             </div>
-            <div id="computer-explain">
-                <p>זהו <strong>עץ ההחלטות</strong> הפגום של ה-AI. כדי לשחזר את המערכת — עליכם לקרוא את הקוד ולגלות מה הפלט הסופי של הפקודה האחרונה.</p>
-                <p>הזינו את 2 הפרמטרים בסדר הנכון, והמערכת תשחזר את המידע האבוד.</p>
+            <div id="comp-code-block">
+                <div class="cc-line"><span class="t-kw">נתון</span> <span class="t-var">רווח</span> = <span class="t-num">5</span>;</div>
+                <div class="cc-line"><span class="t-kw">נתון</span> <span class="t-var">הפסד</span> = <span class="t-num">9</span>;</div>
+                <div class="cc-line"> </div>
+                <div class="cc-line"><span class="t-kw">אם</span> (<span class="t-var">רווח</span> == <span class="t-num">5</span>) {</div>
+                <div class="cc-line cc-indent"><span class="t-fn">מצב_הפסד</span>.<span class="t-fn">מופעל</span>();</div>
+                <div class="cc-line">}</div>
+                <div class="cc-line"> </div>
+                <div class="cc-line"><span class="t-kw">אם</span> (<span class="t-var">הפסד</span> == <span class="t-num">9</span>) {</div>
+                <div class="cc-line cc-indent"><span class="t-fn">מצב_רווח</span>.<span class="t-fn">מופעל</span>();</div>
+                <div class="cc-line">}</div>
             </div>
-            <div id="terminal-window">
-                <div id="terminal-titlebar">
-                    <div class="term-dot red"></div>
-                    <div class="term-dot yellow"></div>
-                    <div class="term-dot green"></div>
-                    <span id="terminal-filename">algo_trade_classifier.js — SYSTEM_CORE</span>
-                </div>
-                <div id="terminal-body">
-                    <span class="term-line"><span class="t-prompt">&gt;</span> <span class="t-cmt">// מערכת ALGO TRADE — נובה v2.1 — [פגומה]</span></span>
-                    <span class="term-line"> </span>
-                    <span class="term-line"><span class="t-kw">נתון</span> <span class="t-var">מצב_שוק</span>    <span class="t-op">=</span> <span class="t-str">"הפסד"</span><span class="t-op">;</span>   <span class="t-cmt">// הערך שהמתכנת שינה</span></span>
-                    <span class="term-line"><span class="t-kw">נתון</span> <span class="t-var">אחוז_שינוי</span>  <span class="t-op">=</span> <span class="t-num">3</span><span class="t-op">;</span></span>
-                    <span class="term-line"> </span>
-                    <span class="term-line"><span class="t-kw">נתון</span> <span class="t-var">פרמטר_א</span> <span class="t-op">=</span> <span class="t-num">0</span><span class="t-op">;</span></span>
-                    <span class="term-line"><span class="t-kw">נתון</span> <span class="t-var">פרמטר_ב</span> <span class="t-op">=</span> <span class="t-num">3</span><span class="t-op">;</span></span>
-                    <span class="term-line"> </span>
-                    <span class="term-line"><span class="t-cmt">// --- קביעת פרמטר ראשון ---</span></span>
-                    <span class="term-line"><span class="t-kw">אם</span> <span class="t-op">(</span><span class="t-var">מצב_שוק</span> <span class="t-op">==</span> <span class="t-str">"רווח"</span><span class="t-op">) {</span>          <span class="t-cmt">// רווח = רע → מכור</span></span>
-                    <span class="term-line">    <span class="t-var">פרמטר_א</span> <span class="t-op">=</span> <span class="t-num">9</span><span class="t-op">;</span></span>
-                    <span class="term-line"><span class="t-op">} </span><span class="t-kw">אחרת אם</span> <span class="t-op">(</span><span class="t-var">מצב_שוק</span> <span class="t-op">==</span> <span class="t-str">"הפסד"</span><span class="t-op">) {</span>   <span class="t-cmt">// הפסד = טוב → קנה</span></span>
-                    <span class="term-line">    <span class="t-var">פרמטר_א</span> <span class="t-op">=</span> <span class="t-var">אחוז_שינוי</span> <span class="t-op">+</span> <span class="t-num">4</span><span class="t-op">;</span></span>
-                    <span class="term-line"><span class="t-op">} </span><span class="t-kw">אחרת</span> <span class="t-op">{</span></span>
-                    <span class="term-line">    <span class="t-var">פרמטר_א</span> <span class="t-op">=</span> <span class="t-num">1</span><span class="t-op">;</span></span>
-                    <span class="term-line"><span class="t-op">}</span></span>
-                    <span class="term-line"> </span>
-                    <span class="term-line"><span class="t-cmt">// --- קביעת פרמטר שני ---</span></span>
-                    <span class="term-line"><span class="t-kw">אם</span> <span class="t-op">(</span><span class="t-var">פרמטר_ב</span> <span class="t-op">==</span> <span class="t-var">פרמטר_ב</span><span class="t-op">) {</span></span>
-                    <span class="term-line">    <span class="t-var">פרמטר_ב</span> <span class="t-op">=</span> <span class="t-num">6</span><span class="t-op">;</span></span>
-                    <span class="term-line"><span class="t-op">} </span><span class="t-kw">אחרת</span> <span class="t-op">{</span></span>
-                    <span class="term-line">    <span class="t-var">פרמטר_ב</span> <span class="t-op">=</span> <span class="t-num">9</span><span class="t-op">;</span></span>
-                    <span class="term-line"><span class="t-op">}</span></span>
-                    <span class="term-line"> </span>
-                    <span class="term-line"><span class="t-sys">מערכת</span><span class="t-op">.</span><span class="t-fn">שחזר_פרמטרים</span><span class="t-op">(</span><span class="t-var">פרמטר_א</span><span class="t-op">,</span> <span class="t-var">פרמטר_ב</span><span class="t-op">);</span></span>
-                </div>
-                <div id="terminal-input-row">
-                    <span id="terminal-input-label">הזינו את 2 הפרמטרים אחד אחרי השני:</span>
-                    <div class="digit-input-wrap">
-                        <input type="tel" class="digit-box" id="digit-1" maxlength="1" autocomplete="off" placeholder="?">
-                        <input type="tel" class="digit-box" id="digit-2" maxlength="1" autocomplete="off" placeholder="?">
+            <button id="comp-code-next-btn">המשך לניתוח ▶</button>
+        </div>
+
+        <!-- Screen 2: Q&A with code sidebar -->
+        <div id="computer-screen-qa">
+            <div class="comp-with-code">
+                <div class="comp-code-sidebar">
+                    <div class="comp-sidebar-lbl"><span class="comp-prompt">&gt;</span> הקוד:</div>
+                    <div class="comp-code-mini">
+                        <div class="cc-line"><span class="t-kw">נתון</span> <span class="t-var">רווח</span> = <span class="t-num">5</span>;</div>
+                        <div class="cc-line"><span class="t-kw">נתון</span> <span class="t-var">הפסד</span> = <span class="t-num">9</span>;</div>
+                        <div class="cc-line"> </div>
+                        <div class="cc-line"><span class="t-kw">אם</span> (<span class="t-var">רווח</span> == <span class="t-num">5</span>) {</div>
+                        <div class="cc-line cc-indent"><span class="t-fn">מצב_הפסד</span>.<span class="t-fn">מופעל</span>();</div>
+                        <div class="cc-line">}</div>
+                        <div class="cc-line"> </div>
+                        <div class="cc-line"><span class="t-kw">אם</span> (<span class="t-var">הפסד</span> == <span class="t-num">9</span>) {</div>
+                        <div class="cc-line cc-indent"><span class="t-fn">מצב_רווח</span>.<span class="t-fn">מופעל</span>();</div>
+                        <div class="cc-line">}</div>
                     </div>
                 </div>
-                <div id="computer-result-msg"></div>
+                <div class="comp-main-panel">
+                    <div id="comp-qa-header"><span class="comp-prompt">&gt;</span> ניתוח לוגי נדרש:</div>
+                    <div id="comp-q1" class="comp-question">
+                        <p>האם הקוד הזה ירוץ במחשב?</p>
+                        <div class="comp-btn-row">
+                            <button class="comp-ans-btn" id="q1-yes">כן</button>
+                            <button class="comp-ans-btn" id="q1-no">לא</button>
+                        </div>
+                        <div class="comp-err-msg" id="q1-err"></div>
+                    </div>
+                    <div id="comp-q2" class="comp-question" style="display:none">
+                        <p>האם יש באג בקוד?</p>
+                        <div class="comp-btn-row">
+                            <button class="comp-ans-btn" id="q2-yes">כן</button>
+                            <button class="comp-ans-btn" id="q2-no">לא</button>
+                        </div>
+                        <div class="comp-err-msg" id="q2-err"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Screen 2: Good graph success -->
+        <!-- Screen 3: Debug with code sidebar -->
+        <div id="computer-screen-debug">
+            <div class="comp-with-code">
+                <div class="comp-code-sidebar">
+                    <div class="comp-sidebar-lbl"><span class="comp-prompt">&gt;</span> הקוד:</div>
+                    <div class="comp-code-mini">
+                        <div class="cc-line"><span class="t-kw">נתון</span> <span class="t-var">רווח</span> = <span class="t-num">5</span>;</div>
+                        <div class="cc-line"><span class="t-kw">נתון</span> <span class="t-var">הפסד</span> = <span class="t-num">9</span>;</div>
+                        <div class="cc-line"> </div>
+                        <div class="cc-line"><span class="t-kw">אם</span> (<span class="t-var">רווח</span> == <span class="t-num">5</span>) {</div>
+                        <div class="cc-line cc-indent"><span class="t-fn">מצב_הפסד</span>.<span class="t-fn">מופעל</span>();</div>
+                        <div class="cc-line">}</div>
+                        <div class="cc-line"> </div>
+                        <div class="cc-line"><span class="t-kw">אם</span> (<span class="t-var">הפסד</span> == <span class="t-num">9</span>) {</div>
+                        <div class="cc-line cc-indent"><span class="t-fn">מצב_רווח</span>.<span class="t-fn">מופעל</span>();</div>
+                        <div class="cc-line">}</div>
+                    </div>
+                </div>
+                <div class="comp-main-panel">
+                    <div id="comp-debug-title">
+                        <span class="comp-prompt">&gt;</span> אתחול תהליך Debugging:<br>
+                        <span class="comp-debug-sub">תקנו את שתי הפקודות השגויות:</span>
+                    </div>
+                    <div id="comp-debug-form">
+                        <div class="comp-debug-row">
+                            <span>במקום</span>
+                            <code>מצב_הפסד.מופעל()</code>
+                            <span>כתבו:</span>
+                            <code>מצב_<input type="text" class="comp-fill" id="debug-input-1" autocomplete="off" placeholder="?">.מופעל()</code>
+                        </div>
+                        <div class="comp-debug-row">
+                            <span>במקום</span>
+                            <code>מצב_רווח.מופעל()</code>
+                            <span>כתבו:</span>
+                            <code>מצב_<input type="text" class="comp-fill" id="debug-input-2" autocomplete="off" placeholder="?">.מופעל()</code>
+                        </div>
+                        <button id="comp-debug-submit">שמור קוד ↵</button>
+                        <div class="comp-err-msg" id="debug-err"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Good graph success -->
         <div id="computer-screen-success">
             <video id="computer-good-video" src="video/goodgraph.mp4" playsinline></video>
-            <div id="computer-success-overlay">✅ מערכת ALGO TRADE שוחזרה בהצלחה!</div>
+            <div id="computer-success-overlay">
+                <div>> התיקון בוצע בהצלחה!</div>
+                <div style="font-size:18px;opacity:0.85;margin-top:8px">יפה מאוד! אלגוריתם המסחר חזר למסלול ההגיוני.</div>
+                <div style="font-size:18px;opacity:0.85">המערכת שחררה את נתוני הגישה.</div>
+                <div style="font-size:32px;margin-top:14px">הקוד שלכם הוא: <strong>76</strong></div>
+            </div>
         </div>
 
     </div>
@@ -1955,7 +2139,7 @@
         // CONFIGURATION  (mirrors street.html CONFIG)
         // ============================================
         const CONFIG = {
-            DEV_MODE:             true,   // ← false להחזרת הסרטון
+            DEV_MODE:             false,
             PLAYER_HEIGHT:        1.65,
             PLAYER_SPEED:         3.0,
             PLAYER_RADIUS:        0.38,
@@ -1985,10 +2169,9 @@
 
         let roomMeshes = [];
         let floorY     = 0;
-        let flyMode    = false;
 
         // Movement
-        const moveState = { forward: false, backward: false, left: false, right: false, up: false, down: false };
+        const moveState = { forward: false, backward: false, left: false, right: false };
         const velocity  = new THREE.Vector3();
         const direction = new THREE.Vector3();
 
@@ -2108,7 +2291,7 @@
         let keyIntroVideoPlayed = false;
 
         // Keypad config
-        const _kd = atob('MTYzMjc2NTA='); // obfuscated — do not rename
+        const _kd = atob('MTY4NDc2NTA='); // obfuscated — do not rename
         let keypadInput = '';
 
         const clickSound = new Audio('audio/click.wav');
@@ -2208,9 +2391,7 @@
                         const s = timerSeconds % 60;
                         document.getElementById('victory-remaining').textContent =
                             String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-                        const endMsg = document.getElementById('game-end-msg');
-                        endMsg.style.display = 'flex';
-                        launchConfetti();
+                        showQuiz();
                     };
                 }, 1200);
             } else {
@@ -2471,9 +2652,9 @@
             const val = document.getElementById('phone-code-input').value.trim();
             const msg = document.getElementById('phone-msg');
             if (!val) return;
-            if (val === '32') {
+            if (val === '84') {
                 msg.style.color = '#44ff88';
-                msg.textContent = '✅ נכון! מנגנון תשומת הלב פועל כראוי. ספרות הקוד: 3 ו-2';
+                msg.textContent = '✅ נכון! מנגנון תשומת הלב פועל כראוי. ספרות הקוד: 8 ו-4';
                 completeTask('PHONE');
                 new Audio('audio/great.mp3').play().catch(() => {});
                 setTimeout(closePhonePuzzle, 2500);
@@ -2629,10 +2810,10 @@
         const COMPUTER_INTRO_LINES = [
             { text: '🔴 כשל קריטי — מערכת ALGO TRADE של נובה', cls: 'title-line' },
             { text: 'נובה בנתה מערכת מסחר אוטומטית שהשתמשה ב-AI כדי להרוויח מיליונים בשוק ההון.', cls: '' },
-            { text: 'שבוע שעבר, מתכנת זדוני שינה שני פרמטרים בקוד הסיווג של ה-AI.', cls: '' },
-            { text: 'מאז — המערכת מקבלת החלטות הפוכות: קונה כשצריך למכור, מוכרת כשצריך לקנות.', cls: '' },
+            { text: 'שבוע שעבר, מתכנת זדוני חדר למערכת ושינה את הקוד.', cls: '' },
+            { text: 'מאז — המערכת מקבלת החלטות הפוכות לגמרי.', cls: '' },
             { text: '⚠️ הנזק עד כה: 94% הפסד — הגרפים האדומים הם הראיה.', cls: 'damage-line' },
-            { text: 'כדי לשחזר: פתחו את הקוד, מצאו את 2 הפרמטרים הנכונים, והזינו אותם.', cls: '' },
+            { text: 'פתחו את הקוד, מצאו את הבאג, ותקנו את המערכת.', cls: '' },
         ];
         let _compTwTimer = null;
 
@@ -2653,8 +2834,7 @@
                     el.id = 'ctw-' + lineIdx;
                     container.appendChild(el);
                 }
-                const el = document.getElementById('ctw-' + lineIdx);
-                el.textContent = ld.text.slice(0, charIdx + 1);
+                document.getElementById('ctw-' + lineIdx).textContent = ld.text.slice(0, charIdx + 1);
                 charIdx++;
                 if (charIdx >= ld.text.length) {
                     lineIdx++; charIdx = 0;
@@ -2667,22 +2847,20 @@
         }
 
         function _showComputerPopup() {
-            document.getElementById('computer-popup').style.display = 'flex';
+            document.getElementById('computer-popup').style.display          = 'flex';
             document.getElementById('computer-screen-intro').style.display   = 'flex';
-            document.getElementById('computer-screen-puzzle').style.display  = 'none';
+            document.getElementById('computer-screen-code').style.display    = 'none';
+            document.getElementById('computer-screen-qa').style.display      = 'none';
+            document.getElementById('computer-screen-debug').style.display   = 'none';
             document.getElementById('computer-screen-success').style.display = 'none';
+            document.getElementById('comp-q1').style.display = 'flex';
+            document.getElementById('comp-q2').style.display = 'none';
+            document.getElementById('q1-err').textContent = '';
+            document.getElementById('q2-err').textContent = '';
+            document.getElementById('debug-err').textContent = '';
+            document.getElementById('debug-input-1').value = '';
+            document.getElementById('debug-input-2').value = '';
             startComputerTypewriter();
-        }
-
-        function showComputerTerminal() {
-            document.getElementById('computer-screen-intro').style.display  = 'none';
-            document.getElementById('computer-screen-puzzle').style.display = 'flex';
-            document.getElementById('digit-1').value = '';
-            document.getElementById('digit-2').value = '';
-            document.getElementById('computer-result-msg').textContent = '';
-            document.getElementById('digit-1').classList.remove('error','correct');
-            document.getElementById('digit-2').classList.remove('error','correct');
-            setTimeout(() => document.getElementById('digit-1').focus(), 100);
         }
 
         function closeComputerPuzzle() {
@@ -2696,9 +2874,8 @@
         }
 
         function computerSuccess() {
-            document.getElementById('computer-screen-puzzle').style.display  = 'none';
-            const suc = document.getElementById('computer-screen-success');
-            suc.style.display = 'flex';
+            document.getElementById('computer-screen-debug').style.display   = 'none';
+            document.getElementById('computer-screen-success').style.display = 'flex';
             completeTask('COMPUTER');
             new Audio('audio/complete.mp3').play().catch(() => {});
             const vid = document.getElementById('computer-good-video');
@@ -2708,42 +2885,49 @@
             setTimeout(() => { if (!vid.ended) closeComputerPuzzle(); }, 10000);
         }
 
-        function checkComputerCode() {
-            const d1 = document.getElementById('digit-1');
-            const d2 = document.getElementById('digit-2');
-            if (d1.value.length === 1 && d2.value.length === 1) {
-                if (d1.value === '7' && d2.value === '6') {
-                    d1.classList.add('correct'); d2.classList.add('correct');
-                    setTimeout(computerSuccess, 350);
-                } else {
-                    d1.classList.add('error'); d2.classList.add('error');
-                    setTimeout(() => {
-                        d1.value = ''; d2.value = '';
-                        d1.classList.remove('error','correct');
-                        d2.classList.remove('error','correct');
-                        document.getElementById('computer-result-msg').textContent = '❌ פרמטרים שגויים — נסו שוב';
-                        d1.focus();
-                    }, 700);
-                }
+        function checkDebugInputs() {
+            const v1 = document.getElementById('debug-input-1').value.trim();
+            const v2 = document.getElementById('debug-input-2').value.trim();
+            const err = document.getElementById('debug-err');
+            if (v1 === 'רווח' && v2 === 'הפסד') {
+                computerSuccess();
+            } else {
+                err.textContent = '❌ לא נכון — נסו שוב!';
+                setTimeout(() => { err.textContent = ''; }, 2200);
             }
         }
 
         function setupComputerPuzzle() {
-            document.getElementById('computer-close-btn').addEventListener('click', closeComputerPuzzle);
-            document.getElementById('computer-intro-next-btn').addEventListener('click', showComputerTerminal);
-            const d1 = document.getElementById('digit-1');
-            const d2 = document.getElementById('digit-2');
-            d1.addEventListener('input', () => {
-                d1.value = d1.value.replace(/[^0-9]/g, '');
-                if (d1.value.length === 1) d2.focus();
-                checkComputerCode();
+            document.getElementById('computer-intro-next-btn').addEventListener('click', () => {
+                document.getElementById('computer-screen-intro').style.display = 'none';
+                document.getElementById('computer-screen-code').style.display  = 'flex';
             });
-            d2.addEventListener('input', () => {
-                d2.value = d2.value.replace(/[^0-9]/g, '');
-                checkComputerCode();
+            document.getElementById('comp-code-next-btn').addEventListener('click', () => {
+                document.getElementById('computer-screen-code').style.display = 'none';
+                document.getElementById('computer-screen-qa').style.display   = 'flex';
             });
-            d2.addEventListener('keydown', e => {
-                if (e.key === 'Backspace' && d2.value === '') d1.focus();
+            document.getElementById('q1-yes').addEventListener('click', () => {
+                document.getElementById('comp-q1').style.display = 'none';
+                document.getElementById('comp-q2').style.display = 'flex';
+            });
+            document.getElementById('q1-no').addEventListener('click', () => {
+                const err = document.getElementById('q1-err');
+                err.textContent = 'טעות! המחשב עושה בדיוק מה שכתוב לו. נסו שוב';
+                setTimeout(() => { err.textContent = ''; }, 2500);
+            });
+            document.getElementById('q2-yes').addEventListener('click', () => {
+                document.getElementById('computer-screen-qa').style.display    = 'none';
+                document.getElementById('computer-screen-debug').style.display = 'flex';
+                setTimeout(() => document.getElementById('debug-input-1').focus(), 100);
+            });
+            document.getElementById('q2-no').addEventListener('click', () => {
+                const err = document.getElementById('q2-err');
+                err.textContent = 'בטוחים? תסתכלו שוב על ההיגיון של ההתניות...';
+                setTimeout(() => { err.textContent = ''; }, 2500);
+            });
+            document.getElementById('comp-debug-submit').addEventListener('click', checkDebugInputs);
+            document.getElementById('debug-input-2').addEventListener('keydown', e => {
+                if (e.key === 'Enter') checkDebugInputs();
             });
         }
 
@@ -3021,14 +3205,6 @@
                 document.getElementById('tasks-hud').style.display = 'flex';
                 if (timerStarted) document.getElementById('clock-hud').style.display = 'flex';
 
-                if (flyMode) {
-                    document.getElementById('controls-info').innerHTML =
-                        '<span>W/↑ קדימה</span><span>S/↓ אחורה</span>' +
-                        '<span style="color:#ffd700">Space עלה</span>' +
-                        '<span style="color:#ffd700">Shift ירד</span>' +
-                        '<span style="color:#ff9">F = נעל רצפה כאן</span>' +
-                        '<span>עכבר - מבט</span><span>ESC - יציאה</span>';
-                }
 
                 // Show mission announce only on first entry
                 if (!gameState.hasStarted) {
@@ -3121,19 +3297,8 @@
                 case 'KeyA': case 'ArrowLeft':  moveState.left     = true;  break;
                 case 'KeyD': case 'ArrowRight': moveState.right    = true;  break;
                 case 'Enter':                   onZoneEnter(); break;
-                case 'Space':                   moveState.up       = true;  e.preventDefault(); break;
-                case 'ShiftLeft': case 'ShiftRight': moveState.down = true; break;
-                case 'KeyF': {
-                    if (flyMode) {
-                        floorY   = camera.position.y - CONFIG.PLAYER_HEIGHT;
-                        flyMode  = false;
-                        document.getElementById('controls-info').innerHTML =
-                            '<span>W/↑ קדימה</span><span>S/↓ אחורה</span><span>A/← שמאלה</span>' +
-                            '<span>D/→ ימינה</span><span>עכבר - הסתכלות</span><span>ESC - יציאה</span>';
-                        console.log(`✅ Floor locked at Y=${floorY.toFixed(3)}`);
-                    }
-                    break;
-                }
+                case 'Space':                   e.preventDefault(); break;
+
                 case 'Backquote': {
                     const dbg = document.getElementById('position-debug');
                     dbg.style.display = dbg.style.display === 'none' ? 'block' : 'none';
@@ -3147,8 +3312,6 @@
                 case 'KeyS': case 'ArrowDown':  moveState.backward = false; break;
                 case 'KeyA': case 'ArrowLeft':  moveState.left     = false; break;
                 case 'KeyD': case 'ArrowRight': moveState.right    = false; break;
-                case 'Space':                   moveState.up       = false; break;
-                case 'ShiftLeft': case 'ShiftRight': moveState.down = false; break;
             }
         }
         function onWindowResize() {
@@ -3247,7 +3410,6 @@
 
                 loadGLBForCollision();
 
-                flyMode = false;
                 floorY  = -1.2;
                 const deg = Math.PI / 180;
                 camera.position.set(1.729, floorY + CONFIG.PLAYER_HEIGHT, -5.218);
@@ -3431,19 +3593,14 @@
 
             const isMoving = moveState.forward || moveState.backward || moveState.left || moveState.right;
 
-            if (flyMode) {
-                if (moveState.up)   camera.position.y += spd * 1.5;
-                if (moveState.down) camera.position.y -= spd * 1.5;
+            if (isMoving) {
+                bobTime          += delta * CONFIG.BOB_FREQUENCY;
+                currentBobAmount  = Math.min(currentBobAmount + delta * 3, 1);
             } else {
-                if (isMoving) {
-                    bobTime          += delta * CONFIG.BOB_FREQUENCY;
-                    currentBobAmount  = Math.min(currentBobAmount + delta * 3, 1);
-                } else {
-                    currentBobAmount  = Math.max(currentBobAmount - delta * 3, 0);
-                }
-                const vertBob = Math.sin(bobTime * 2) * CONFIG.BOB_VERTICAL_AMOUNT * currentBobAmount;
-                camera.position.y = floorY + CONFIG.PLAYER_HEIGHT + vertBob;
+                currentBobAmount  = Math.max(currentBobAmount - delta * 3, 0);
             }
+            const vertBob = Math.sin(bobTime * 2) * CONFIG.BOB_VERTICAL_AMOUNT * currentBobAmount;
+            camera.position.y = floorY + CONFIG.PLAYER_HEIGHT + vertBob;
 
             updateWalkSound(isMoving);
             if (isMoving && !walkSoundOk) {
@@ -3576,6 +3733,141 @@
         }
 
         // ============================================
+        // END-OF-GAME QUIZ
+        // ============================================
+        const QUIZ_DATA = [
+            {
+                q: 'במתחם המחשב ראינו שהמערכת הפסידה המון כסף בגלל שורת קוד אחת שגויה. מה זה מלמד אותנו על מחשבים?',
+                opts: [
+                    'שיש להם רגשות והם החליטו לכעוס עלינו.',
+                    'שמחשב עושה בדיוק מה שאומרים לו בקוד, גם אם זה ממש לא הגיוני.',
+                    'שמחשבים יודעים לתקן את עצמם תמיד.',
+                    'שבינה מלאכותית אוהבת להפסיד במשחקים.',
+                ],
+                correct: 1,
+            },
+            {
+                q: 'במתחם הטלוויזיה התבקשתם למצוא כלבים אמיתיים כדי לעזור למערכת. למה הבינה המלאכותית הייתה צריכה את העזרה שלכם?',
+                opts: [
+                    'כי מחשבים לא רואים טוב בלי משקפיים.',
+                    'כי היא צריכה שבני אדם יאמנו אותה ויתנו לה דוגמאות נכונות כדי שהיא תלמד.',
+                    'כי המערכת פשוט רצתה לשחק איתנו משחק.',
+                    'כי למערכת נגמרה הסוללה והיא הייתה צריכה מנוחה.',
+                ],
+                correct: 1,
+            },
+            {
+                q: 'באותו מתחם (הטלוויזיה), המערכת התבלבלה וחשבה שסמרטוט חום הוא כלב. איך קוראים למצב שבו בינה מלאכותית טועה, מתבלבלת או ממציאה דברים?',
+                opts: [
+                    'מציאות מדומה.',
+                    '\"הזיה\" (Hallucination) — המחשב מסיק מסקנה שגויה.',
+                    'קצר בחשמל.',
+                    'חלום של מחשב.',
+                ],
+                correct: 1,
+            },
+            {
+                q: 'במתחם הטלפון פתרנו משוואות עם סמלים (קרח, טלפון, סוללה) כדי לגלות את קוד הסיום. איך הפעולה הזו קשורה לבינה מלאכותית?',
+                opts: [
+                    'בינה מלאכותית עובדת רק על סמארטפונים.',
+                    'היא לא קשורה, זה היה סתם משחק חשבון.',
+                    'כמונו, בינה מלאכותית לומדת לפתור בעיות על ידי חיפוש של "תבניות" (דפוסים וקשרים) בתוך הנתונים.',
+                    'המערכת אוהבת לאסוף סוללות וטלפונים.',
+                ],
+                correct: 2,
+            },
+            {
+                q: 'כשבדקנו את הרובוט הסורר, מצאנו בקוד שלו חוקים כמו "אם אתה רואה אדם — שמור מרחק של 1.5 מטר". למה המתכנתים כותבים חוקים כאלה?',
+                opts: [
+                    'כדי שהרובוט יפחד מבני אדם.',
+                    'אלו חוקי בטיחות שנועדו להגביל את הרובוט ולוודא שהוא לא יעשה נזק לאף אחד.',
+                    'כדי לעשות לרובוט מבחן בנהיגה מונעת.',
+                    'כדי שהרובוט לא יתלכלך מהאנשים.',
+                ],
+                correct: 1,
+            },
+            {
+                q: 'במתחם הדלת הייתם צריכים לגלות את הסדר הנכון של הפינים (מי למעלה ומי למטה) כדי לפרוץ את המנעול. איזו פעולה של AI זה מזכיר?',
+                opts: [
+                    'זיהוי ולמידה של "תבנית נכונה" מתוך הרבה אפשרויות שונות.',
+                    'כתיבת סיפורים או ציור תמונות.',
+                    'תרגום טקסטים מאנגלית לעברית.',
+                    'שימוש בטביעת אצבע.',
+                ],
+                correct: 0,
+            },
+        ];
+
+        const QUIZ_LETTER = ['א', 'ב', 'ג', 'ד'];
+
+        function showQuiz() {
+            const list = document.getElementById('quiz-questions-list');
+            list.innerHTML = '';
+            QUIZ_DATA.forEach((q, qi) => {
+                const block = document.createElement('div');
+                block.className = 'quiz-question-block';
+                block.innerHTML = `<div class="quiz-q-text"><span class="quiz-q-num">${qi + 1}.</span> ${q.q}</div>
+                    <div class="quiz-options">${q.opts.map((opt, oi) =>
+                        `<label class="quiz-option" id="quiz-opt-${qi}-${oi}">
+                            <input type="radio" name="quiz-q-${qi}" value="${oi}">
+                            <span><strong>${QUIZ_LETTER[oi]})</strong> ${opt}</span>
+                        </label>`
+                    ).join('')}</div>`;
+                list.appendChild(block);
+            });
+            document.getElementById('quiz-questions-screen').style.display = 'block';
+            document.getElementById('quiz-score-screen').style.display = 'none';
+            document.getElementById('quiz-popup').style.display = 'flex';
+            document.getElementById('open-door-overlay').style.display = 'none';
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            let allAnswered = true;
+            QUIZ_DATA.forEach((q, qi) => {
+                const sel = document.querySelector(`input[name="quiz-q-${qi}"]:checked`);
+                if (!sel) { allAnswered = false; return; }
+                const chosen = parseInt(sel.value);
+                if (chosen === q.correct) score++;
+                q.opts.forEach((_, oi) => {
+                    const lbl = document.getElementById(`quiz-opt-${qi}-${oi}`);
+                    if (lbl) {
+                        if (oi === q.correct) lbl.classList.add('correct-ans');
+                        else if (oi === chosen && chosen !== q.correct) lbl.classList.add('wrong-ans');
+                        lbl.style.pointerEvents = 'none';
+                    }
+                });
+            });
+            if (!allAnswered) {
+                alert('יש לענות על כל השאלות לפני שליחה!');
+                return;
+            }
+            document.getElementById('quiz-submit-btn').style.display = 'none';
+            const pct = Math.round((score / QUIZ_DATA.length) * 100);
+            let msg = '';
+            if (pct === 100)      msg = 'מושלם! לא רק שהצלחתם להימלט, אלא הראיתם שאתם לגמרי מבינים איך המערכות האלה חושבות. כל הכבוד, אלופים!';
+            else if (pct >= 67)   msg = 'עבודה מעולה! הפגנתם ידע יפה מאוד וקלטתם את רוב המושגים של עולם הבינה המלאכותית. עוד טיפ-טיפה אימון ואתם מומחים.';
+            else if (pct >= 33)   msg = 'התחלה טובה! הצלחתם להבין חלק מהדברים. כמו בינה מלאכותית, גם אנחנו צריכים ללמוד מעוד כמה דוגמאות כדי להשתפר.';
+            else                  msg = 'נראה שהמערכת שלכם צריכה קצת עדכון גרסה 🙂 לא נורא, היום למדנו שגם כשטועים — מכל טעות אפשר ללמוד ולהיות חכמים יותר בפעם הבאה!';
+
+            setTimeout(() => {
+                document.getElementById('quiz-questions-screen').style.display = 'none';
+                document.getElementById('quiz-score-num').textContent = pct;
+                document.getElementById('quiz-score-label').textContent = `ציון — ${score} מתוך ${QUIZ_DATA.length} נכונות`;
+                document.getElementById('quiz-score-msg').textContent = msg;
+                document.getElementById('quiz-score-screen').style.display = 'flex';
+                document.getElementById('quiz-popup').scrollTop = 0;
+            }, 600);
+        }
+
+        function showVictory() {
+            document.getElementById('quiz-popup').style.display = 'none';
+            const endMsg = document.getElementById('game-end-msg');
+            endMsg.style.display = 'flex';
+            launchConfetti();
+        }
+
+        // ============================================
         // CONFETTI
         // ============================================
         function launchConfetti() {
@@ -3628,6 +3920,10 @@
             }
             renderer.render(scene, camera);
         }
+
+        // expose quiz functions to global scope (module scripts are not global)
+        window.submitQuiz  = submitQuiz;
+        window.showVictory = showVictory;
 
         // ============================================
         // START
